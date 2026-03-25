@@ -292,6 +292,10 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
     <div class="card card-purple" style="margin-top:20px"><div class="label">What This Means</div><p style="margin-bottom:0;font-size:14px">${desc}</p></div>`;
 }
 
+// UPDATED DASHBOARD SECTION ONLY
+// Replace the loadDash() function in egc_study.html with this version
+// Everything else in the file stays identical
+
 async function loadDash(){
   ['d-n','d-confirmed','d-pct'].forEach(id=>document.getElementById(id).textContent='...');
   document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">Loading...</p>';
@@ -305,35 +309,76 @@ async function loadDash(){
     return;
   }
   const n=rows.length;
+
+  // T metrics
   const confirmed=rows.filter(r=>r.prediction_confirmed).length;
   const confPct=Math.round(confirmed/n*100);
-  const avgDrop=(rows.reduce((a,r)=>a+(r.t_drop_pct||0),0)/n).toFixed(1);
+  const avgTDrop=(rows.reduce((a,r)=>a+(r.t_drop_pct||0),0)/n).toFixed(1);
   const avgT1=(rows.reduce((a,r)=>a+(r.t1_score||0),0)/n).toFixed(3);
   const avgT2=(rows.reduce((a,r)=>a+(r.t2_score||0),0)/n).toFixed(3);
+
+  // Volume metrics
+  const volDrops=rows.map(r=>({
+    drop: (r.t1_wordcount||0)-(r.t2_wordcount||0),
+    pct: r.t1_wordcount>0 ? (((r.t1_wordcount-r.t2_wordcount)/r.t1_wordcount)*100) : 0,
+    wc1: r.t1_wordcount||0,
+    wc2: r.t2_wordcount||0
+  }));
+  const volDown=volDrops.filter(v=>v.drop>0).length;
+  const avgVolPct=(volDrops.reduce((a,v)=>a+v.pct,0)/n).toFixed(1);
+  const avgWC1=(volDrops.reduce((a,v)=>a+v.wc1,0)/n).toFixed(0);
+  const avgWC2=(volDrops.reduce((a,v)=>a+v.wc2,0)/n).toFixed(0);
+
+  // Brandyn divergence — volume down AND T stable/up
+  const divergence=rows.filter((r,i)=>volDrops[i].drop>0 && r.t2_score>=r.t1_score).length;
+
+  // Other
   const avgComfort=(rows.reduce((a,r)=>a+(r.comfort_rating||0),0)/n).toFixed(1);
   const avgR=(rows.reduce((a,r)=>a+(r.r_proxy||0),0)/n).toFixed(3);
   const avgK=(rows.reduce((a,r)=>a+(r.k_proxy||0),0)/n).toFixed(3);
+
   document.getElementById('d-n').textContent=n;
-  document.getElementById('d-confirmed').textContent=confPct+'%';
-  document.getElementById('d-pct').textContent=avgDrop+'%';
+  document.getElementById('d-confirmed').textContent=volDown+'/'+n;
+  document.getElementById('d-pct').textContent=avgVolPct+'%';
+
+  // Update header labels
+  document.getElementById('d-confirmed').closest('.dash-stat').querySelector('.dash-stat-label').textContent='Volume Drop';
+  document.getElementById('d-pct').closest('.dash-stat').querySelector('.dash-stat-label').textContent='Avg Vol Drop %';
+
   document.getElementById('dash-metrics').innerHTML=`
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">TRANSMISSION FIDELITY (T)</div>
     <div class="dash-row"><span class="dash-row-label">Mean T — Task 1 (free writing)</span><span class="dash-row-value" style="color:var(--teal)">${avgT1}</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean T — Task 2 (evaluative)</span><span class="dash-row-value" style="color:var(--red)">${avgT2}</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean T drop</span><span class="dash-row-value">${avgDrop}%</span></div>
-    <div class="dash-row"><span class="dash-row-label">Prediction confirmed (T drop > 2%)</span><span class="dash-row-value">${confirmed} / ${n} (${confPct}%)</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean T — Task 2 (evaluative)</span><span class="dash-row-value">${avgT2}</span></div>
+    <div class="dash-row"><span class="dash-row-label">T drop confirmed (>2%)</span><span class="dash-row-value">${confirmed} / ${n} (${confPct}%)</span></div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin:16px 0 12px">VOLUME — BRANDYN'S DENSITY-VOLUME DIVERGENCE</div>
+    <div class="dash-row"><span class="dash-row-label">Mean word count — Task 1</span><span class="dash-row-value" style="color:var(--teal)">${avgWC1} words</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean word count — Task 2</span><span class="dash-row-value" style="color:var(--red)">${avgWC2} words</span></div>
+    <div class="dash-row"><span class="dash-row-label">Subjects writing fewer words under evaluation</span><span class="dash-row-value" style="color:var(--orange)">${volDown} / ${n} (${Math.round(volDown/n*100)}%)</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean volume reduction</span><span class="dash-row-value">${avgVolPct}%</span></div>
+    <div class="dash-row"><span class="dash-row-label">Density-volume divergence (vol↓ + T stable/up)</span><span class="dash-row-value" style="color:var(--purple)">${divergence} / ${n} subjects</span></div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin:16px 0 12px">PROXIES</div>
     <div class="dash-row"><span class="dash-row-label">Mean comfort rating</span><span class="dash-row-value">${avgComfort} / 10</span></div>
     <div class="dash-row"><span class="dash-row-label">Mean r proxy</span><span class="dash-row-value">${avgR}</span></div>
     <div class="dash-row"><span class="dash-row-label">Mean K proxy</span><span class="dash-row-value">${avgK}</span></div>`;
-  document.getElementById('dash-rows').innerHTML=rows.map((r,i)=>`
-    <div class="dash-row">
+
+  document.getElementById('dash-rows').innerHTML=rows.map((r,i)=>{
+    const vd=volDrops[i];
+    const volDir=vd.drop>0;
+    const diverg=volDir && r.t2_score>=r.t1_score;
+    return`<div class="dash-row">
       <span class="dash-row-label">${r.subject_id||'S'+i} · ${new Date(r.created_at).toLocaleDateString()}</span>
-      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <span style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <span class="tag tag-teal" style="font-size:10px">T1=${(r.t1_score||0).toFixed(2)}</span>
-        <span class="tag tag-${r.prediction_confirmed?'red':'purple'}" style="font-size:10px">T2=${(r.t2_score||0).toFixed(2)}</span>
-        <span class="tag ${r.prediction_confirmed?'tag-red':'tag-teal'}" style="font-size:10px">${r.prediction_confirmed?'↓ confirmed':'→ stable/up'}</span>
+        <span class="tag tag-${r.t2_score<r.t1_score?'teal':'red'}" style="font-size:10px">T2=${(r.t2_score||0).toFixed(2)}</span>
+        <span class="tag tag-${volDir?'red':'purple'}" style="font-size:10px">${vd.wc1}→${vd.wc2}w ${volDir?'↓':'↑'}</span>
+        ${diverg?'<span class="tag tag-purple" style="font-size:10px">divergence</span>':''}
       </span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
+
 </script>
 </body>
 </html>
