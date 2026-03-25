@@ -152,8 +152,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   </div>
 </div>
 
-<!-- S5: Dashboard -->
+<!-- S5: Dashboard Login -->
 <div class="screen" id="s5">
+  <div class="accent-line" style="background:var(--orange)"></div>
+  <div class="label">Researcher Access</div>
+  <h2>Admin Dashboard</h2>
+  <p class="muted">This area is restricted to researchers.</p>
+  <div id="auth-wall">
+    <div class="card">
+      <div class="label">Enter Access Code</div>
+      <input type="password" id="admin-pw" placeholder="Access code..."
+             style="width:100%;background:var(--bg);border:1px solid var(--border-bright);border-radius:8px;color:var(--white);font-family:'DM Mono',monospace;font-size:14px;padding:12px 16px;outline:none;margin-bottom:12px"
+             onkeydown="if(event.key==='Enter')checkPw()">
+      <div id="pw-error" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;display:none;margin-bottom:8px">Incorrect access code.</div>
+      <button class="btn btn-primary" onclick="checkPw()">Access Dashboard →</button>
+    </div>
+  </div>
+  <div id="dash-content" style="display:none">
   <div class="accent-line" style="background:var(--orange)"></div>
   <div class="label">Live Results Dashboard</div>
   <h2>Study Data</h2>
@@ -169,6 +184,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <button class="btn btn-primary" onclick="loadDash()">Refresh →</button>
     <button class="btn btn-secondary" onclick="go(0)">Take the Study →</button>
   </div>
+  </div><!-- /dash-content -->
 </div>
 
 </div>
@@ -187,7 +203,7 @@ function go(n){
   if(n===1)startTime1=Date.now();
   if(n===3){endTime1=Date.now();startTime2=Date.now();}
 }
-function showDash(){loadDash();go(5);}
+function showDash(){go(5);}
 
 function updateCount(tid,wcid){
   const text=document.getElementById(tid).value.trim();
@@ -296,6 +312,17 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
 // Replace the loadDash() function in egc_study.html with this version
 // Everything else in the file stays identical
 
+function checkPw(){
+  const pw=document.getElementById('admin-pw').value;
+  if(pw==='Awdrjki100010101110e!'){
+    document.getElementById('auth-wall').style.display='none';
+    document.getElementById('dash-content').style.display='block';
+    loadDash();
+  } else {
+    document.getElementById('pw-error').style.display='block';
+    document.getElementById('admin-pw').value='';
+  }
+}
 async function loadDash(){
   ['d-n','d-confirmed','d-pct'].forEach(id=>document.getElementById(id).textContent='...');
   document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">Loading...</p>';
