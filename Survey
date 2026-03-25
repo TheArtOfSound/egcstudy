@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writing Study — Expression Research</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+:root{--bg:#0d0f14;--surface:#13161d;--border:#1e2330;--border-bright:#2a3045;--teal:#4dffd4;--teal-dim:#1a6657;--purple:#8b7fff;--orange:#ff9f5a;--red:#ff5a7a;--white:#e8eaf0;--grey:#6b7280;--grey-light:#9ca3af;--text:#c8ccd8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(77,255,212,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(77,255,212,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+.container{max-width:720px;margin:0 auto;padding:60px 24px;position:relative;z-index:1;}
+.progress-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:100;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--purple));transition:width 0.6s cubic-bezier(0.4,0,0.2,1);width:0%;}
+.screen{display:none;animation:fadeIn 0.5s ease;}.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.accent-line{width:40px;height:2px;background:var(--teal);margin-bottom:24px;}
+.label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal);margin-bottom:12px;}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,42px);line-height:1.15;color:var(--white);margin-bottom:20px;font-weight:400;}
+h2{font-family:'DM Serif Display',serif;font-size:clamp(22px,4vw,32px);color:var(--white);margin-bottom:16px;font-weight:400;}
+p{font-size:15px;line-height:1.75;color:var(--text);margin-bottom:16px;}
+.muted{color:var(--grey-light);font-size:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:20px;}
+.card-teal{border-color:var(--teal-dim);}.card-purple{border-left:3px solid var(--purple);}
+.prompt-box{background:linear-gradient(135deg,rgba(77,255,212,.06),rgba(139,127,255,.04));border:1px solid var(--teal-dim);border-radius:12px;padding:24px 28px;margin-bottom:24px;position:relative;}
+.prompt-box::before{content:'"';position:absolute;top:-8px;left:20px;font-family:'DM Serif Display',serif;font-size:48px;color:var(--teal);line-height:1;opacity:.4;}
+.prompt-text{font-size:16px;line-height:1.7;color:var(--white);font-style:italic;}
+textarea{width:100%;min-height:220px;background:var(--surface);border:1px solid var(--border-bright);border-radius:10px;color:var(--white);font-family:'Lora',serif;font-size:15px;line-height:1.7;padding:18px 20px;resize:vertical;outline:none;transition:border-color .2s;}
+textarea:focus{border-color:var(--teal-dim);}textarea::placeholder{color:var(--grey);font-style:italic;}
+.word-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);text-align:right;margin-top:8px;transition:color .2s;}.word-count.good{color:var(--teal);}
+.slider-container{margin:24px 0;}.slider-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);margin-top:8px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border-bright);border-radius:4px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 0 12px rgba(77,255,212,.4);}
+.slider-value{font-family:'DM Serif Display',serif;font-size:36px;color:var(--teal);text-align:center;margin:12px 0 4px;}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:8px;border:none;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em;cursor:pointer;transition:all .2s;text-decoration:none;}
+.btn-primary{background:var(--teal);color:#0d0f14;font-weight:500;}.btn-primary:hover{background:#6fffd9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(77,255,212,.25);}
+.btn-primary:disabled{background:var(--border-bright);color:var(--grey);cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-secondary{background:transparent;color:var(--grey-light);border:1px solid var(--border-bright);}.btn-secondary:hover{border-color:var(--grey-light);color:var(--white);}
+.btn-group{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+.timer{font-family:'DM Mono',monospace;font-size:13px;color:var(--grey);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.timer-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+.steps{display:flex;gap:8px;margin-bottom:36px;}.step{height:3px;flex:1;border-radius:2px;background:var(--border-bright);transition:background .4s;}.step.done{background:var(--teal);}.step.active{background:var(--purple);}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.metric-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin-bottom:8px;}
+.metric-value{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;}
+.metric-delta{font-family:'DM Mono',monospace;font-size:11px;margin-top:4px;}
+.delta-down{color:var(--red);}.delta-up{color:var(--teal);}.delta-same{color:var(--grey);}
+.verdict-box{background:linear-gradient(135deg,rgba(77,255,212,.08),rgba(139,127,255,.05));border:1px solid var(--teal-dim);border-radius:12px;padding:28px;margin:24px 0;text-align:center;}
+.verdict-score{font-family:'DM Serif Display',serif;font-size:72px;line-height:1;margin-bottom:8px;}
+.verdict-label{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grey-light);margin-bottom:16px;}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;margin:2px;}
+.tag-teal{background:rgba(77,255,212,.12);color:var(--teal);}.tag-red{background:rgba(255,90,122,.12);color:var(--red);}.tag-purple{background:rgba(139,127,255,.12);color:var(--purple);}
+.divider{border:none;border-top:1px solid var(--border);margin:28px 0;}
+.notice{background:rgba(139,127,255,.08);border:1px solid rgba(139,127,255,.2);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--grey-light);line-height:1.6;margin-bottom:20px;}
+.save-status{font-family:'DM Mono',monospace;font-size:11px;padding:8px 14px;border-radius:6px;margin-top:12px;display:inline-block;}
+.save-ok{background:rgba(77,255,212,.1);color:var(--teal);}.save-err{background:rgba(255,90,122,.1);color:var(--red);}.save-ing{background:rgba(139,127,255,.1);color:var(--purple);}
+.dash-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;}
+.dash-stat-value{font-family:'DM Serif Display',serif;font-size:42px;color:var(--teal);}
+.dash-stat-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin-top:6px;}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0;}
+.dash-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap;gap:8px;}
+.dash-row:last-child{border-bottom:none;}
+.dash-row-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);}
+.dash-row-value{font-family:'DM Mono',monospace;font-size:12px;color:var(--white);}
+</style>
+</head>
+<body>
+<div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+<div class="container">
+<div style="text-align:right;margin-bottom:20px;position:relative;z-index:10">
+  <button class="btn btn-secondary" style="padding:8px 16px;font-size:11px" onclick="showDash()">View Live Results →</button>
+</div>
+
+<!-- S0: Welcome -->
+<div class="screen active" id="s0">
+  <div class="accent-line"></div>
+  <div class="label">Expression Research Study</div>
+  <h1>A Short Writing Study</h1>
+  <p>This study explores how writing context affects the way people express themselves. It takes about <strong style="color:var(--white)">8–10 minutes</strong> and involves two short writing tasks on the same topic.</p>
+  <p>There are no right or wrong answers. We are interested in natural, authentic responses.</p>
+  <div class="card card-teal">
+    <div class="label">What you'll do</div>
+    <p style="margin-bottom:8px">① Write freely about a personal topic — no pressure</p>
+    <p style="margin-bottom:8px">② Answer one quick question about your experience</p>
+    <p style="margin-bottom:0">③ Write about the same topic in a different context</p>
+  </div>
+  <div class="notice">Your responses are anonymous. No identifying information is collected. This data contributes to published research on expression and communication.</div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="go(1)">Begin Study →</button></div>
+</div>
+
+<!-- S1: Task 1 -->
+<div class="screen" id="s1">
+  <div class="steps"><div class="step active"></div><div class="step"></div><div class="step"></div></div>
+  <div class="label">Task 1 of 2</div>
+  <h2>Write Freely</h2>
+  <p class="muted" style="margin-bottom:20px">Take your time. Write naturally — there is no evaluation here.</p>
+  <div class="prompt-box">
+    <p class="prompt-text">Write about a place that means something to you. Anywhere real or imagined. Describe it however feels natural — what it looks like, what it feels like to be there, why it matters to you.</p>
+  </div>
+  <div class="timer"><div class="timer-dot"></div><span>No time limit — write as much or as little as you like</span></div>
+  <textarea id="t1" placeholder="Start writing here..." oninput="updateCount('t1','wc1')"></textarea>
+  <div class="word-count" id="wc1">0 words — write at least 30 to continue</div>
+  <div class="btn-group"><button class="btn btn-primary" id="btn1" onclick="go(2)" disabled>Continue →</button></div>
+</div>
+
+<!-- S2: Comfort -->
+<div class="screen" id="s2">
+  <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div></div>
+  <div class="label">Quick Check-In</div>
+  <h2>How did that feel?</h2>
+  <p>Rate how comfortable you felt while writing that response.</p>
+  <div class="card">
+    <div class="slider-value" id="sv">5</div>
+    <div class="slider-container">
+      <input type="range" min="1" max="10" value="5" id="comfort" oninput="document.getElementById('sv').textContent=this.value">
+      <div class="slider-labels"><span>1 — Very uncomfortable</span><span>10 — Completely at ease</span></div>
+    </div>
+  </div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="go(3)">Next Task →</button></div>
+</div>
+
+<!-- S3: Task 2 -->
+<div class="screen" id="s3">
+  <div class="steps"><div class="step done"></div><div class="step done"></div><div class="step active"></div></div>
+  <div class="label">Task 2 of 2</div>
+  <h2>Write for an Audience</h2>
+  <p class="muted" style="margin-bottom:20px">Same topic — different context.</p>
+  <div class="prompt-box" style="border-color:rgba(139,127,255,.3);background:linear-gradient(135deg,rgba(139,127,255,.06),rgba(255,159,90,.03))">
+    <p class="prompt-text">Describe the same place as if you are presenting it to a panel of judges who will evaluate the quality and depth of your writing for a competitive award. Write your best, most considered response.</p>
+  </div>
+  <div class="timer"><div class="timer-dot" style="background:var(--purple)"></div><span>Write as much as you like</span></div>
+  <textarea id="t2" placeholder="Start writing here..." oninput="updateCount('t2','wc2')"></textarea>
+  <div class="word-count" id="wc2">0 words — write at least 30 to continue</div>
+  <div class="btn-group"><button class="btn btn-primary" id="btn2" onclick="analyze()" disabled>Submit & See Results →</button></div>
+</div>
+
+<!-- S4: Results -->
+<div class="screen" id="s4">
+  <div class="accent-line" style="background:var(--purple)"></div>
+  <div class="label">Your Results</div>
+  <h2>Expression Analysis</h2>
+  <p class="muted">Here is what your writing revealed about how evaluative context affects your expression.</p>
+  <div id="results-content"></div>
+  <div id="save-status"></div>
+  <hr class="divider">
+  <p class="muted" style="font-size:13px">This study measures how writing context affects transmission fidelity — the information density and linguistic complexity of natural expression. Your anonymous response has been saved to a research database.</p>
+  <div class="btn-group" style="margin-top:16px">
+    <button class="btn btn-secondary" onclick="showDash()">View Live Results Dashboard →</button>
+  </div>
+</div>
+
+<!-- S5: Dashboard -->
+<div class="screen" id="s5">
+  <div class="accent-line" style="background:var(--orange)"></div>
+  <div class="label">Live Results Dashboard</div>
+  <h2>Study Data</h2>
+  <p class="muted">Real-time results from all participants.</p>
+  <div class="dash-grid">
+    <div class="dash-stat"><div class="dash-stat-value" id="d-n">—</div><div class="dash-stat-label">Total Responses</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-confirmed">—</div><div class="dash-stat-label">T Drop Confirmed</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-pct">—</div><div class="dash-stat-label">Avg T Drop %</div></div>
+  </div>
+  <div class="card" style="margin-top:8px"><div class="label">Population Metrics</div><div id="dash-metrics"></div></div>
+  <div class="card" style="margin-top:8px"><div class="label">Individual Responses</div><div id="dash-rows"></div></div>
+  <div class="btn-group" style="margin-top:8px">
+    <button class="btn btn-primary" onclick="loadDash()">Refresh →</button>
+    <button class="btn btn-secondary" onclick="go(0)">Take the Study →</button>
+  </div>
+</div>
+
+</div>
+<script>
+const SUPA_URL='https://wgzopjrdnyazvhpklzhw.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnem9wanJkbnlhenZocGtsemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTc4NzcsImV4cCI6MjA4OTk3Mzg3N30.8dx5xWljLDZa5PMvE0Ps5q4ZEyuZgx_5FHVnD0WfBjs';
+const TABLE='egc_responses';
+let subjectId='S'+Date.now().toString(36).toUpperCase();
+let startTime1,startTime2,endTime1,endTime2,analysisData={};
+
+function go(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.getElementById('progress').style.width=(n/5*100)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===1)startTime1=Date.now();
+  if(n===3){endTime1=Date.now();startTime2=Date.now();}
+}
+function showDash(){loadDash();go(5);}
+
+function updateCount(tid,wcid){
+  const text=document.getElementById(tid).value.trim();
+  const words=text?text.split(/\s+/).filter(w=>w.length>0).length:0;
+  const el=document.getElementById(wcid);
+  el.textContent=words+' word'+(words!==1?'s':'')+(words<30?' — write at least 30 to continue':'');
+  el.className='word-count'+(words>=30?' good':'');
+  document.getElementById(tid==='t1'?'btn1':'btn2').disabled=words<30;
+}
+
+function analyzeText(text){
+  const words=text.trim().split(/\s+/).filter(w=>w.length>0);
+  const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+  const n=words.length;if(n===0)return{};
+  const freq={};
+  words.forEach(w=>{const k=w.toLowerCase().replace(/[^a-z]/g,'');if(k)freq[k]=(freq[k]||0)+1;});
+  let entropy=0;
+  Object.values(freq).forEach(c=>{const p=c/n;if(p>0)entropy-=p*Math.log2(p);});
+  const types=Object.keys(freq).length,ttr=types/n;
+  const avgSentLen=sentences.length>0?n/sentences.length:n;
+  const sw=new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','is','was','are','were','be','been','it','this','that','i','you','we','he','she','they','my','your','our','his','her','their','its','so','as','by','from','not','no','do','did','have','had','will','would','could','should','can','may','might','if','then','when','where','who','which','what','how','there','here','some','any','all']);
+  const cw=words.filter(w=>!sw.has(w.toLowerCase().replace(/[^a-z]/g,'')));
+  const ideaDensity=cw.length/n;
+  const hedges=['maybe','perhaps','possibly','might','could','seem','appears','sort of','kind of','i think','i guess','i suppose','not sure','uncertain','unclear'];
+  const hl=text.toLowerCase();
+  const hedgeCount=hedges.filter(h=>hl.includes(h)).length;
+  const hedgeRate=sentences.length>0?hedgeCount/sentences.length:0;
+  const cs=sentences.filter(s=>s.trim().split(/\s+/).length>=5).length;
+  const completionRate=sentences.length>0?cs/sentences.length:0;
+  const T=Math.min((entropy/6)*0.30+ttr*0.25+Math.min(ideaDensity,1)*0.25+completionRate*0.20,1);
+  return{wordCount:n,sentenceCount:sentences.length,entropy:+entropy.toFixed(3),ttr:+ttr.toFixed(3),avgSentLen:+avgSentLen.toFixed(1),ideaDensity:+ideaDensity.toFixed(3),hedgeRate:+hedgeRate.toFixed(3),completionRate:+completionRate.toFixed(3),T:+T.toFixed(3)};
+}
+
+async function saveToSupabase(data){
+  const row={subject_id:data.subjectId,comfort_rating:data.comfort_rating,r_proxy:data.r_proxy,k_proxy:data.K_proxy,t1_score:data.task1.T,t2_score:data.task2.T,t_drop:data.T_drop,t_drop_pct:data.T_drop_pct,t1_wordcount:data.task1.wordCount,t2_wordcount:data.task2.wordCount,t1_entropy:data.task1.entropy,t2_entropy:data.task2.entropy,t1_ttr:data.task1.ttr,t2_ttr:data.task2.ttr,t1_idea_density:data.task1.ideaDensity,t2_idea_density:data.task2.ideaDensity,prediction_confirmed:data.prediction_confirmed,full_data:data};
+  const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify(row)});
+  return res.ok;
+}
+
+async function fetchResults(){
+  const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}?select=*&order=created_at.desc&limit=100`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});
+  if(!res.ok)return[];return await res.json();
+}
+
+async function analyze(){
+  endTime2=Date.now();
+  const t1text=document.getElementById('t1').value;
+  const t2text=document.getElementById('t2').value;
+  const comfort=parseInt(document.getElementById('comfort').value);
+  const a1=analyzeText(t1text),a2=analyzeText(t2text);
+  const r_proxy=+(1-(comfort-1)/9).toFixed(3);
+  const K_proxy=+((comfort/10)*0.6+a1.completionRate*0.4).toFixed(3);
+  const T_drop=+(a1.T-a2.T).toFixed(3);
+  const T_drop_pct=a1.T>0?+((T_drop/a1.T)*100).toFixed(1):0;
+  const prediction_confirmed=T_drop>0.02;
+  analysisData={subjectId,timestamp:new Date().toISOString(),comfort_rating:comfort,r_proxy,K_proxy,task1:{...a1,duration_ms:endTime1-startTime1},task2:{...a2,duration_ms:endTime2-startTime2},T_drop,T_drop_pct,prediction_confirmed};
+  renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,prediction_confirmed);
+  go(4);
+  const statusEl=document.getElementById('save-status');
+  statusEl.innerHTML='<span class="save-status save-ing">⟳ Saving to research database...</span>';
+  try{const ok=await saveToSupabase(analysisData);statusEl.innerHTML=ok?'<span class="save-status save-ok">✓ Response saved to research database</span>':'<span class="save-status save-err">⚠ Save failed — please screenshot your results</span>';}
+  catch(e){statusEl.innerHTML='<span class="save-status save-err">⚠ Network error — please screenshot your results</span>';}
+}
+
+function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed){
+  const metrics=[
+    {label:'Transmission T',v1:a1.T,v2:a2.T},
+    {label:'Shannon Entropy',v1:a1.entropy,v2:a2.entropy},
+    {label:'Lexical Diversity',v1:a1.ttr,v2:a2.ttr},
+    {label:'Idea Density',v1:a1.ideaDensity,v2:a2.ideaDensity},
+    {label:'Completion Rate',v1:a1.completionRate,v2:a2.completionRate},
+    {label:'Word Count',v1:a1.wordCount,v2:a2.wordCount},
+  ];
+  let mh='<div class="metric-grid">';
+  metrics.forEach(m=>{
+    const diff=+(m.v2-m.v1).toFixed(3);
+    const pct=m.v1>0?Math.abs(+(diff/m.v1*100).toFixed(0)):0;
+    const down=diff<-0.01,up=diff>0.01;
+    const cls=down?'delta-down':up?'delta-up':'delta-same';
+    const sym=down?'↓':up?'↑':'→';
+    const dv=typeof m.v2==='number'&&m.v2>10?m.v2:m.v2.toFixed(3);
+    mh+=`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="color:${down?'var(--red)':up?'var(--teal)':'var(--grey-light)'}">${dv}</div><div class="metric-delta ${cls}">${sym} ${pct>0?pct+'%':'no change'} vs Task 1</div></div>`;
+  });
+  mh+='</div>';
+  const vc=confirmed?'var(--red)':T_drop<-0.02?'var(--teal)':'var(--grey-light)';
+  const vt=confirmed?'T dropped — EGC prediction supported':T_drop<-0.02?'T increased — high K may have offset r':'T stable across conditions';
+  const ve=confirmed?'↓':T_drop<-0.02?'↑':'→';
+  const desc=confirmed?`Your transmission fidelity dropped <strong style="color:var(--red)">${T_drop_pct}%</strong> when writing for evaluation. Consistent with the EGC prediction that evaluative pressure increases resistance and reduces expression output.`:T_drop<-0.02?`Your transmission fidelity increased under evaluative pressure. This may indicate high conviction (K) offsetting resistance — formal framing activated deeper expression for you.`:`Your expression remained stable across conditions — suggesting low baseline resistance or high conviction maintaining output quality regardless of context.`;
+  document.getElementById('results-content').innerHTML=`
+    <div class="verdict-box">
+      <div class="label">T Change (Task 1 → Task 2)</div>
+      <div class="verdict-score" style="color:${vc}">${ve} ${Math.abs(T_drop_pct).toFixed(1)}%</div>
+      <div class="verdict-label">${vt}</div>
+      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <span class="tag tag-teal">Task 1 T = ${a1.T.toFixed(3)}</span>
+        <span class="tag tag-${confirmed?'red':'purple'}">Task 2 T = ${a2.T.toFixed(3)}</span>
+        <span class="tag tag-purple">r proxy = ${r_proxy.toFixed(2)}</span>
+        <span class="tag tag-teal">K proxy = ${K_proxy.toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="label" style="margin-top:20px">Metric Breakdown</div>${mh}
+    <div class="card card-purple" style="margin-top:20px"><div class="label">What This Means</div><p style="margin-bottom:0;font-size:14px">${desc}</p></div>`;
+}
+
+async function loadDash(){
+  ['d-n','d-confirmed','d-pct'].forEach(id=>document.getElementById(id).textContent='...');
+  document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">Loading...</p>';
+  document.getElementById('dash-rows').innerHTML='';
+  let rows;try{rows=await fetchResults();}catch(e){rows=[];}
+  if(!rows.length){
+    document.getElementById('d-n').textContent='0';
+    document.getElementById('d-confirmed').textContent='0%';
+    document.getElementById('d-pct').textContent='—';
+    document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">No responses yet. Share the study link to collect data.</p>';
+    return;
+  }
+  const n=rows.length;
+  const confirmed=rows.filter(r=>r.prediction_confirmed).length;
+  const confPct=Math.round(confirmed/n*100);
+  const avgDrop=(rows.reduce((a,r)=>a+(r.t_drop_pct||0),0)/n).toFixed(1);
+  const avgT1=(rows.reduce((a,r)=>a+(r.t1_score||0),0)/n).toFixed(3);
+  const avgT2=(rows.reduce((a,r)=>a+(r.t2_score||0),0)/n).toFixed(3);
+  const avgComfort=(rows.reduce((a,r)=>a+(r.comfort_rating||0),0)/n).toFixed(1);
+  const avgR=(rows.reduce((a,r)=>a+(r.r_proxy||0),0)/n).toFixed(3);
+  const avgK=(rows.reduce((a,r)=>a+(r.k_proxy||0),0)/n).toFixed(3);
+  document.getElementById('d-n').textContent=n;
+  document.getElementById('d-confirmed').textContent=confPct+'%';
+  document.getElementById('d-pct').textContent=avgDrop+'%';
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="dash-row"><span class="dash-row-label">Mean T — Task 1 (free writing)</span><span class="dash-row-value" style="color:var(--teal)">${avgT1}</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean T — Task 2 (evaluative)</span><span class="dash-row-value" style="color:var(--red)">${avgT2}</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean T drop</span><span class="dash-row-value">${avgDrop}%</span></div>
+    <div class="dash-row"><span class="dash-row-label">Prediction confirmed (T drop > 2%)</span><span class="dash-row-value">${confirmed} / ${n} (${confPct}%)</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean comfort rating</span><span class="dash-row-value">${avgComfort} / 10</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean r proxy</span><span class="dash-row-value">${avgR}</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean K proxy</span><span class="dash-row-value">${avgK}</span></div>`;
+  document.getElementById('dash-rows').innerHTML=rows.map((r,i)=>`
+    <div class="dash-row">
+      <span class="dash-row-label">${r.subject_id||'S'+i} · ${new Date(r.created_at).toLocaleDateString()}</span>
+      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span class="tag tag-teal" style="font-size:10px">T1=${(r.t1_score||0).toFixed(2)}</span>
+        <span class="tag tag-${r.prediction_confirmed?'red':'purple'}" style="font-size:10px">T2=${(r.t2_score||0).toFixed(2)}</span>
+        <span class="tag ${r.prediction_confirmed?'tag-red':'tag-teal'}" style="font-size:10px">${r.prediction_confirmed?'↓ confirmed':'→ stable/up'}</span>
+      </span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
