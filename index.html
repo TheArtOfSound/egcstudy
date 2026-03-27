@@ -3,60 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Writing Study — Expression Research</title>
+<title>The Gate Assessment — Expression Research</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
-:root{--bg:#0d0f14;--surface:#13161d;--border:#1e2330;--border-bright:#2a3045;--teal:#4dffd4;--teal-dim:#1a6657;--purple:#8b7fff;--orange:#ff9f5a;--red:#ff5a7a;--white:#e8eaf0;--grey:#6b7280;--grey-light:#9ca3af;--text:#c8ccd8;}
+:root{--bg:#0d0f14;--surface:#13161d;--surface-glass:rgba(19,22,29,0.65);--border:#1e2330;--border-bright:#2a3045;--teal:#4dffd4;--teal-dim:#1a6657;--purple:#8b7fff;--orange:#ff9f5a;--red:#ff5a7a;--coral:#ff6b6b;--white:#e8eaf0;--grey:#6b7280;--grey-light:#9ca3af;--text:#c8ccd8;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Lora',serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(77,255,212,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(77,255,212,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+
+/* Animated gradient background */
+.bg-gradient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.bg-gradient::before{content:'';position:absolute;width:150%;height:150%;top:-25%;left:-25%;background:radial-gradient(ellipse at 30% 20%,rgba(77,255,212,0.06) 0%,transparent 50%),radial-gradient(ellipse at 70% 60%,rgba(139,127,255,0.05) 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,rgba(255,159,90,0.03) 0%,transparent 50%);animation:bgDrift 20s ease-in-out infinite alternate;}
+@keyframes bgDrift{0%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(-3%,2%) rotate(1deg);}100%{transform:translate(2%,-1%) rotate(-1deg);}}
+
 .container{max-width:720px;margin:0 auto;padding:60px 24px;position:relative;z-index:1;}
-.progress-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:100;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--purple));transition:width 0.6s cubic-bezier(0.4,0,0.2,1);width:0%;}
-.screen{display:none;animation:fadeIn 0.5s ease;}.screen.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* Step Progress Indicator */
+.progress-steps{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;gap:0;padding:16px 24px;background:rgba(13,15,20,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.progress-step{display:flex;align-items:center;gap:0;}
+.step-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--surface);border:2px solid var(--border-bright);transition:all 0.5s cubic-bezier(0.4,0,0.2,1);position:relative;}
+.step-icon.active{border-color:var(--purple);background:rgba(139,127,255,0.15);box-shadow:0 0 16px rgba(139,127,255,0.3);}
+.step-icon.done{border-color:var(--teal);background:rgba(77,255,212,0.12);box-shadow:0 0 12px rgba(77,255,212,0.2);}
+.step-connector{width:40px;height:2px;background:var(--border-bright);transition:background 0.5s;}
+.step-connector.done{background:linear-gradient(90deg,var(--teal),var(--teal));}
+
+/* Screen transitions */
+.screen{display:none;opacity:0;transform:translateY(16px);}
+.screen.active{display:block;animation:screenIn 0.6s cubic-bezier(0.4,0,0.2,1) forwards;}
+@keyframes screenIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* Staggered element reveals */
+.reveal{opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
 .accent-line{width:40px;height:2px;background:var(--teal);margin-bottom:24px;}
 .label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal);margin-bottom:12px;}
 h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,42px);line-height:1.15;color:var(--white);margin-bottom:20px;font-weight:400;}
 h2{font-family:'DM Serif Display',serif;font-size:clamp(22px,4vw,32px);color:var(--white);margin-bottom:16px;font-weight:400;}
 p{font-size:15px;line-height:1.75;color:var(--text);margin-bottom:16px;}
 .muted{color:var(--grey-light);font-size:14px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:20px;}
-.card-teal{border-color:var(--teal-dim);}.card-purple{border-left:3px solid var(--purple);}
-.prompt-box{background:linear-gradient(135deg,rgba(77,255,212,.06),rgba(139,127,255,.04));border:1px solid var(--teal-dim);border-radius:12px;padding:24px 28px;margin-bottom:24px;position:relative;}
-.prompt-box::before{content:'"';position:absolute;top:-8px;left:20px;font-family:'DM Serif Display',serif;font-size:48px;color:var(--teal);line-height:1;opacity:.4;}
+
+/* Glassmorphism cards */
+.card{background:var(--surface-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+.card-teal{border-color:var(--teal-dim);}
+.card-purple{border-left:3px solid var(--purple);}
+
+.prompt-box{background:linear-gradient(135deg,rgba(77,255,212,.06),rgba(139,127,255,.04));border:1px solid var(--teal-dim);border-radius:16px;padding:24px 28px;margin-bottom:24px;position:relative;}
+.prompt-box::before{content:'\201C';position:absolute;top:-8px;left:20px;font-family:'DM Serif Display',serif;font-size:48px;color:var(--teal);line-height:1;opacity:.4;}
 .prompt-text{font-size:16px;line-height:1.7;color:var(--white);font-style:italic;}
-textarea{width:100%;min-height:220px;background:var(--surface);border:1px solid var(--border-bright);border-radius:10px;color:var(--white);font-family:'Lora',serif;font-size:15px;line-height:1.7;padding:18px 20px;resize:vertical;outline:none;transition:border-color .2s;}
-textarea:focus{border-color:var(--teal-dim);}textarea::placeholder{color:var(--grey);font-style:italic;}
-.word-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);text-align:right;margin-top:8px;transition:color .2s;}.word-count.good{color:var(--teal);}
-.slider-container{margin:24px 0;}.slider-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);margin-top:8px;}
-input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border-bright);border-radius:4px;outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 0 12px rgba(77,255,212,.4);}
-.slider-value{font-family:'DM Serif Display',serif;font-size:36px;color:var(--teal);text-align:center;margin:12px 0 4px;}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:8px;border:none;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em;cursor:pointer;transition:all .2s;text-decoration:none;}
-.btn-primary{background:var(--teal);color:#0d0f14;font-weight:500;}.btn-primary:hover{background:#6fffd9;transform:translateY(-1px);box-shadow:0 8px 24px rgba(77,255,212,.25);}
+
+/* Textarea with glow */
+.textarea-wrap{position:relative;margin-bottom:4px;}
+textarea{width:100%;min-height:220px;background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;color:var(--white);font-family:'Lora',serif;font-size:15px;line-height:1.7;padding:18px 20px;resize:vertical;outline:none;transition:border-color .3s,box-shadow .3s;}
+textarea:focus{border-color:var(--teal-dim);box-shadow:0 0 0 3px rgba(77,255,212,0.08),0 0 24px rgba(77,255,212,0.06);}
+textarea.purple-glow:focus{border-color:rgba(139,127,255,0.4);box-shadow:0 0 0 3px rgba(139,127,255,0.08),0 0 24px rgba(139,127,255,0.06);}
+textarea::placeholder{color:var(--grey);font-style:italic;}
+
+/* Animated word count */
+.word-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);text-align:right;margin-top:8px;transition:all .3s ease;}
+.word-count.good{color:var(--teal);transform:scale(1);}
+.word-count .wc-num{display:inline-block;transition:transform 0.15s ease;}
+.word-count.bump .wc-num{transform:scale(1.3);}
+
+/* Comfort slider */
+.slider-container{margin:24px 0;}
+.slider-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);margin-top:12px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:8px;background:linear-gradient(90deg,rgba(77,255,212,0.2),rgba(139,127,255,0.3),rgba(77,255,212,0.2));border-radius:8px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#6fffd9,var(--teal));cursor:pointer;box-shadow:0 0 16px rgba(77,255,212,.5),0 2px 8px rgba(0,0,0,.3);transition:transform .2s,box-shadow .2s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 0 24px rgba(77,255,212,.6),0 2px 8px rgba(0,0,0,.4);}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.05);}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#6fffd9,var(--teal));cursor:pointer;border:none;box-shadow:0 0 16px rgba(77,255,212,.5),0 2px 8px rgba(0,0,0,.3);}
+.slider-value{font-family:'DM Serif Display',serif;font-size:48px;color:var(--teal);text-align:center;margin:12px 0 4px;transition:transform 0.2s ease;}
+.slider-value.pop{transform:scale(1.1);}
+.slider-desc{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey-light);text-align:center;margin-bottom:4px;min-height:16px;transition:opacity 0.3s;}
+
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:10px;border:none;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em;cursor:pointer;transition:all .25s cubic-bezier(0.4,0,0.2,1);text-decoration:none;}
+.btn-primary{background:var(--teal);color:#0d0f14;font-weight:500;}.btn-primary:hover{background:#6fffd9;transform:translateY(-2px);box-shadow:0 8px 28px rgba(77,255,212,.25);}
 .btn-primary:disabled{background:var(--border-bright);color:var(--grey);cursor:not-allowed;transform:none;box-shadow:none;}
 .btn-secondary{background:transparent;color:var(--grey-light);border:1px solid var(--border-bright);}.btn-secondary:hover{border-color:var(--grey-light);color:var(--white);}
+.btn-purple{background:var(--purple);color:#0d0f14;font-weight:500;}.btn-purple:hover{background:#a99fff;transform:translateY(-2px);box-shadow:0 8px 28px rgba(139,127,255,.25);}
 .btn-group{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+
 .timer{font-family:'DM Mono',monospace;font-size:13px;color:var(--grey);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
 .timer-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
-.steps{display:flex;gap:8px;margin-bottom:36px;}.step{height:3px;flex:1;border-radius:2px;background:var(--border-bright);transition:background .4s;}.step.done{background:var(--teal);}.step.active{background:var(--purple);}
-.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;}
-.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
-.metric-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin-bottom:8px;}
-.metric-value{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;}
-.metric-delta{font-family:'DM Mono',monospace;font-size:11px;margin-top:4px;}
-.delta-down{color:var(--red);}.delta-up{color:var(--teal);}.delta-same{color:var(--grey);}
-.verdict-box{background:linear-gradient(135deg,rgba(77,255,212,.08),rgba(139,127,255,.05));border:1px solid var(--teal-dim);border-radius:12px;padding:28px;margin:24px 0;text-align:center;}
-.verdict-score{font-family:'DM Serif Display',serif;font-size:72px;line-height:1;margin-bottom:8px;}
-.verdict-label{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--grey-light);margin-bottom:16px;}
-.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;margin:2px;}
-.tag-teal{background:rgba(77,255,212,.12);color:var(--teal);}.tag-red{background:rgba(255,90,122,.12);color:var(--red);}.tag-purple{background:rgba(139,127,255,.12);color:var(--purple);}
-.divider{border:none;border-top:1px solid var(--border);margin:28px 0;}
-.notice{background:rgba(139,127,255,.08);border:1px solid rgba(139,127,255,.2);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--grey-light);line-height:1.6;margin-bottom:20px;}
+
+.micro-copy{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);margin-bottom:16px;opacity:0.7;}
+
+/* Time estimate badge */
+.time-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(77,255,212,0.08);border:1px solid rgba(77,255,212,0.15);border-radius:24px;padding:8px 18px;font-family:'DM Mono',monospace;font-size:12px;color:var(--teal);margin-bottom:24px;}
+.time-badge svg{width:16px;height:16px;}
+
+.notice{background:rgba(139,127,255,.08);border:1px solid rgba(139,127,255,.2);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--grey-light);line-height:1.6;margin-bottom:20px;}
 .save-status{font-family:'DM Mono',monospace;font-size:11px;padding:8px 14px;border-radius:6px;margin-top:12px;display:inline-block;}
 .save-ok{background:rgba(77,255,212,.1);color:var(--teal);}.save-err{background:rgba(255,90,122,.1);color:var(--red);}.save-ing{background:rgba(139,127,255,.1);color:var(--purple);}
+
+/* ===== RESULTS PAGE ===== */
+
+/* Type reveal */
+@keyframes typeReveal{0%{opacity:0;transform:scale(0.5);}60%{opacity:1;transform:scale(1.08);}100%{opacity:1;transform:scale(1);}}
+@keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 20px var(--glow-color));opacity:1;}50%{filter:drop-shadow(0 0 40px var(--glow-color));opacity:0.9;}}
+@keyframes barGrow{from{width:0%;}to{width:var(--target-width);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes countUp{from{opacity:0;}to{opacity:1;}}
+@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+
+.hero-type-card{border-radius:20px;padding:48px 32px;text-align:center;position:relative;overflow:hidden;margin-bottom:32px;background:var(--surface-glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);}
+.hero-type-card::before{content:'';position:absolute;inset:0;border-radius:20px;padding:2px;background:var(--hero-border-gradient);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:0.6;}
+
+.type-icon{font-size:72px;line-height:1;margin-bottom:16px;animation:typeReveal 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;--glow-color:var(--type-color);display:inline-block;}
+.type-icon.glowing{animation:typeReveal 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards,glowPulse 3s ease-in-out 0.8s infinite;}
+.type-name{font-family:'DM Serif Display',serif;font-size:clamp(32px,6vw,48px);color:var(--white);margin-bottom:8px;font-weight:400;}
+.type-tagline{font-family:'Lora',serif;font-size:16px;font-style:italic;color:var(--text);line-height:1.6;max-width:480px;margin:0 auto;}
+
+/* Meaning section */
+.meaning-card{border-radius:16px;padding:28px;margin-bottom:24px;background:var(--surface-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);}
+.meaning-card h3{font-family:'DM Serif Display',serif;font-size:22px;color:var(--white);margin-bottom:16px;font-weight:400;}
+
+/* Visual comparison bars */
+.comparison-section{margin:32px 0;}
+.comparison-row{margin-bottom:24px;}
+.comparison-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--grey);margin-bottom:10px;}
+.bar-pair{display:flex;flex-direction:column;gap:6px;}
+.bar-wrap{display:flex;align-items:center;gap:12px;}
+.bar-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--grey-light);width:48px;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;height:24px;background:rgba(255,255,255,0.04);border-radius:6px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:6px;animation:barGrow 1s cubic-bezier(0.4,0,0.2,1) forwards;width:0;}
+.bar-fill-t1{background:linear-gradient(90deg,var(--teal),rgba(77,255,212,0.6));}
+.bar-fill-t2{background:linear-gradient(90deg,var(--purple),rgba(139,127,255,0.6));}
+.bar-value{font-family:'DM Mono',monospace;font-size:11px;color:var(--white);min-width:50px;flex-shrink:0;}
+
+/* Science collapsible */
+.science-toggle{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--surface-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.3s;margin-bottom:4px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey-light);}
+.science-toggle:hover{border-color:var(--border-bright);color:var(--white);}
+.science-toggle .arrow{transition:transform 0.3s;font-size:14px;}
+.science-toggle.open .arrow{transform:rotate(180deg);}
+.science-content{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1);background:var(--surface-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;margin-bottom:24px;}
+.science-content.open{max-height:800px;}
+.science-inner{padding:20px;}
+.science-item{margin-bottom:16px;}
+.science-item:last-child{margin-bottom:0;}
+.science-item h4{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);margin-bottom:6px;}
+.science-item p{font-size:13px;line-height:1.65;margin-bottom:0;color:var(--grey-light);}
+
+/* Share card */
+.share-card{background:var(--surface-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;margin:24px 0;}
+.share-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--grey-light);background:var(--bg);border-radius:8px;padding:14px;margin:12px 0;text-align:left;line-height:1.6;word-break:break-word;}
+.copy-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;border:1px solid var(--border-bright);background:transparent;color:var(--white);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{border-color:var(--teal);color:var(--teal);}
+.copy-btn.copied{border-color:var(--teal);background:rgba(77,255,212,0.1);color:var(--teal);}
+
+/* Animated numbers */
+.anim-num{display:inline-block;}
+
+/* CTA */
+.cta-section{text-align:center;margin:32px 0 16px;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:28px 0;}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;margin:2px;}
+.tag-teal{background:rgba(77,255,212,.12);color:var(--teal);}.tag-red{background:rgba(255,90,122,.12);color:var(--red);}.tag-purple{background:rgba(139,127,255,.12);color:var(--purple);}
+
+/* Dashboard */
 .dash-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;}
 .dash-stat-value{font-family:'DM Serif Display',serif;font-size:42px;color:var(--teal);}
 .dash-stat-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin-top:6px;}
@@ -65,91 +171,124 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .dash-row:last-child{border-bottom:none;}
 .dash-row-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);}
 .dash-row-value{font-family:'DM Mono',monospace;font-size:12px;color:var(--white);}
+
+/* Welcome steps */
+.welcome-steps{display:flex;flex-direction:column;gap:0;}
+.welcome-step{display:flex;align-items:flex-start;gap:16px;padding:16px 0;}
+.welcome-step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;background:rgba(77,255,212,0.1);color:var(--teal);border:1px solid rgba(77,255,212,0.2);}
+.welcome-step-text{font-size:15px;line-height:1.6;padding-top:4px;}
+
+/* Responsive */
+@media(max-width:600px){
+  .container{padding:80px 16px 40px;}
+  .progress-steps{padding:12px 16px;}
+  .step-icon{width:30px;height:30px;font-size:14px;}
+  .step-connector{width:24px;}
+  .hero-type-card{padding:32px 20px;}
+  .type-icon{font-size:56px;}
+  .dash-grid{grid-template-columns:1fr;}
+  .bar-wrap{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
-<div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+
+<div class="bg-gradient"></div>
+
+<!-- Progress Steps -->
+<div class="progress-steps" id="progress-steps">
+  <div class="progress-step"><div class="step-icon active" id="si0">&#9998;</div></div>
+  <div class="step-connector" id="sc0"></div>
+  <div class="progress-step"><div class="step-icon" id="si1">&#10084;</div></div>
+  <div class="step-connector" id="sc1"></div>
+  <div class="progress-step"><div class="step-icon" id="si2">&#9998;</div></div>
+  <div class="step-connector" id="sc2"></div>
+  <div class="progress-step"><div class="step-icon" id="si3">&#10024;</div></div>
+</div>
+
 <div class="container">
 <div style="text-align:right;margin-bottom:20px;position:relative;z-index:10">
-  <button class="btn btn-secondary" style="padding:8px 16px;font-size:11px" onclick="showDash()">View Live Results →</button>
+  <button class="btn btn-secondary" style="padding:8px 16px;font-size:11px" onclick="showDash()">View Live Results &#8594;</button>
 </div>
 
 <!-- S0: Welcome -->
 <div class="screen active" id="s0">
   <div class="accent-line"></div>
   <div class="label">Expression Research Study</div>
-  <h1>A Short Writing Study</h1>
-  <p>This study explores how writing context affects the way people express themselves. It takes about <strong style="color:var(--white)">8–10 minutes</strong> and involves two short writing tasks on the same topic.</p>
-  <p>There are no right or wrong answers. We are interested in natural, authentic responses.</p>
-  <div class="card card-teal">
+  <h1>The Gate Assessment</h1>
+  <p>Discover how evaluative pressure shapes your expression. Two short writing tasks, same topic, different contexts. Your results reveal your unique expression pattern.</p>
+
+  <div class="time-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    8&#8211;10 minutes
+  </div>
+
+  <div class="card card-teal" style="margin-bottom:24px;">
     <div class="label">What you'll do</div>
-    <p style="margin-bottom:8px">① Write freely about a personal topic — no pressure</p>
-    <p style="margin-bottom:8px">② Answer one quick question about your experience</p>
-    <p style="margin-bottom:0">③ Write about the same topic in a different context</p>
+    <div class="welcome-steps">
+      <div class="welcome-step"><div class="welcome-step-num">1</div><div class="welcome-step-text">Write freely about a personal topic &#8212; no pressure, no judgement</div></div>
+      <div class="welcome-step"><div class="welcome-step-num">2</div><div class="welcome-step-text">Quick check-in on how that felt</div></div>
+      <div class="welcome-step"><div class="welcome-step-num">3</div><div class="welcome-step-text">Write about the same topic in a different context</div></div>
+    </div>
   </div>
   <div class="notice">Your responses are anonymous. No identifying information is collected. This data contributes to published research on expression and communication.</div>
-  <div class="btn-group"><button class="btn btn-primary" onclick="go(1)">Begin Study →</button></div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="go(1)">Begin the Assessment &#8594;</button></div>
 </div>
 
 <!-- S1: Task 1 -->
 <div class="screen" id="s1">
-  <div class="steps"><div class="step active"></div><div class="step"></div><div class="step"></div></div>
   <div class="label">Task 1 of 2</div>
   <h2>Write Freely</h2>
-  <p class="muted" style="margin-bottom:20px">Take your time. Write naturally — there is no evaluation here.</p>
+  <p class="muted" style="margin-bottom:12px">Take your time. Write naturally &#8212; there is no evaluation here.</p>
+  <p class="micro-copy">Just let your thoughts flow. There are no right answers.</p>
   <div class="prompt-box">
-    <p class="prompt-text">Write about a place that means something to you. Anywhere real or imagined. Describe it however feels natural — what it looks like, what it feels like to be there, why it matters to you.</p>
+    <p class="prompt-text">Write about a place that means something to you. Anywhere real or imagined. Describe it however feels natural &#8212; what it looks like, what it feels like to be there, why it matters to you.</p>
   </div>
-  <div class="timer"><div class="timer-dot"></div><span>No time limit — write as much or as little as you like</span></div>
-  <textarea id="t1" placeholder="Start writing here..." oninput="updateCount('t1','wc1')"></textarea>
-  <div class="word-count" id="wc1">0 words — write at least 30 to continue</div>
-  <div class="btn-group"><button class="btn btn-primary" id="btn1" onclick="go(2)" disabled>Continue →</button></div>
+  <div class="timer"><div class="timer-dot"></div><span>No time limit &#8212; write as much or as little as you like</span></div>
+  <div class="textarea-wrap">
+    <textarea id="t1" placeholder="Start writing here..." oninput="updateCount('t1','wc1')"></textarea>
+  </div>
+  <div class="word-count" id="wc1"><span class="wc-num">0</span> words &#8212; write at least 30 to continue</div>
+  <div class="btn-group"><button class="btn btn-primary" id="btn1" onclick="go(2)" disabled>Continue &#8594;</button></div>
 </div>
 
 <!-- S2: Comfort -->
 <div class="screen" id="s2">
-  <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div></div>
   <div class="label">Quick Check-In</div>
   <h2>How did that feel?</h2>
   <p>Rate how comfortable you felt while writing that response.</p>
   <div class="card">
     <div class="slider-value" id="sv">5</div>
+    <div class="slider-desc" id="slider-desc">Neutral</div>
     <div class="slider-container">
-      <input type="range" min="1" max="10" value="5" id="comfort" oninput="document.getElementById('sv').textContent=this.value">
-      <div class="slider-labels"><span>1 — Very uncomfortable</span><span>10 — Completely at ease</span></div>
+      <input type="range" min="1" max="10" value="5" id="comfort" oninput="updateSlider(this.value)">
+      <div class="slider-labels"><span>1 &#8212; Very uncomfortable</span><span>10 &#8212; Completely at ease</span></div>
     </div>
   </div>
-  <div class="btn-group"><button class="btn btn-primary" onclick="go(3)">Next Task →</button></div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="go(3)">Next Task &#8594;</button></div>
 </div>
 
 <!-- S3: Task 2 -->
 <div class="screen" id="s3">
-  <div class="steps"><div class="step done"></div><div class="step done"></div><div class="step active"></div></div>
   <div class="label">Task 2 of 2</div>
   <h2>Write for an Audience</h2>
-  <p class="muted" style="margin-bottom:20px">Same topic — different context.</p>
+  <p class="muted" style="margin-bottom:12px">Same topic &#8212; different context.</p>
+  <p class="micro-copy">Notice how the framing changes things. There is no wrong way to respond.</p>
   <div class="prompt-box" style="border-color:rgba(139,127,255,.3);background:linear-gradient(135deg,rgba(139,127,255,.06),rgba(255,159,90,.03))">
     <p class="prompt-text">Describe the same place as if you are presenting it to a panel of judges who will evaluate the quality and depth of your writing for a competitive award. Write your best, most considered response.</p>
   </div>
   <div class="timer"><div class="timer-dot" style="background:var(--purple)"></div><span>Write as much as you like</span></div>
-  <textarea id="t2" placeholder="Start writing here..." oninput="updateCount('t2','wc2')"></textarea>
-  <div class="word-count" id="wc2">0 words — write at least 30 to continue</div>
-  <div class="btn-group"><button class="btn btn-primary" id="btn2" onclick="analyze()" disabled>Submit & See Results →</button></div>
+  <div class="textarea-wrap">
+    <textarea id="t2" class="purple-glow" placeholder="Start writing here..." oninput="updateCount('t2','wc2')"></textarea>
+  </div>
+  <div class="word-count" id="wc2"><span class="wc-num">0</span> words &#8212; write at least 30 to continue</div>
+  <div class="btn-group"><button class="btn btn-primary" id="btn2" onclick="analyze()" disabled>Submit &amp; See Results &#8594;</button></div>
 </div>
 
 <!-- S4: Results -->
 <div class="screen" id="s4">
-  <div class="accent-line" style="background:var(--purple)"></div>
-  <div class="label">Your Results</div>
-  <h2>Expression Analysis</h2>
-  <p class="muted">Here is what your writing revealed about how evaluative context affects your expression.</p>
   <div id="results-content"></div>
   <div id="save-status"></div>
-  <hr class="divider">
-  <p class="muted" style="font-size:13px">This study measures how writing context affects transmission fidelity — the information density and linguistic complexity of natural expression. Your anonymous response has been saved to a research database.</p>
-  <div class="btn-group" style="margin-top:16px">
-    <button class="btn btn-secondary" onclick="showDash()">View Live Results Dashboard →</button>
-  </div>
 </div>
 
 <!-- S5: Dashboard Login -->
@@ -165,7 +304,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
              style="width:100%;background:var(--bg);border:1px solid var(--border-bright);border-radius:8px;color:var(--white);font-family:'DM Mono',monospace;font-size:14px;padding:12px 16px;outline:none;margin-bottom:12px"
              onkeydown="if(event.key==='Enter')checkPw()">
       <div id="pw-error" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;display:none;margin-bottom:8px">Incorrect access code.</div>
-      <button class="btn btn-primary" onclick="checkPw()">Access Dashboard →</button>
+      <button class="btn btn-primary" onclick="checkPw()">Access Dashboard &#8594;</button>
     </div>
   </div>
   <div id="dash-content" style="display:none">
@@ -174,17 +313,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <h2>Study Data</h2>
   <p class="muted">Real-time results from all participants.</p>
   <div class="dash-grid">
-    <div class="dash-stat"><div class="dash-stat-value" id="d-n">—</div><div class="dash-stat-label">Total Responses</div></div>
-    <div class="dash-stat"><div class="dash-stat-value" id="d-confirmed">—</div><div class="dash-stat-label">T Drop Confirmed</div></div>
-    <div class="dash-stat"><div class="dash-stat-value" id="d-pct">—</div><div class="dash-stat-label">Avg T Drop %</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-n">&#8212;</div><div class="dash-stat-label">Total Responses</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-confirmed">&#8212;</div><div class="dash-stat-label">T Drop Confirmed</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-pct">&#8212;</div><div class="dash-stat-label">Avg T Drop %</div></div>
   </div>
   <div class="card" style="margin-top:8px"><div class="label">Population Metrics</div><div id="dash-metrics"></div></div>
   <div class="card" style="margin-top:8px"><div class="label">Individual Responses</div><div id="dash-rows"></div></div>
   <div class="btn-group" style="margin-top:8px">
-    <button class="btn btn-primary" onclick="loadDash()">Refresh →</button>
-    <button class="btn btn-secondary" onclick="go(0)">Take the Study →</button>
+    <button class="btn btn-primary" onclick="loadDash()">Refresh &#8594;</button>
+    <button class="btn btn-secondary" onclick="go(0)">Take the Study &#8594;</button>
   </div>
-  </div><!-- /dash-content -->
+  </div>
 </div>
 
 </div>
@@ -195,23 +334,78 @@ const TABLE='egc_responses';
 let subjectId='S'+Date.now().toString(36).toUpperCase();
 let startTime1,startTime2,endTime1,endTime2,analysisData={};
 
+// Step icons and connectors
+const stepMap = {0:[0], 1:[0], 2:[0,1], 3:[0,1,2], 4:[0,1,2,3], 5:[]};
+const activeStep = {0:0, 1:0, 2:1, 3:2, 4:3, 5:-1};
+
+function updateSteps(n){
+  for(let i=0;i<4;i++){
+    const si=document.getElementById('si'+i);
+    si.classList.remove('active','done');
+  }
+  for(let i=0;i<3;i++){
+    document.getElementById('sc'+i).classList.remove('done');
+  }
+  const doneUpTo = n >= 4 ? 3 : (n >= 3 ? 2 : (n >= 2 ? 1 : (n >= 1 ? 0 : -1)));
+  for(let i=0;i<4;i++){
+    const si=document.getElementById('si'+i);
+    if(i < doneUpTo) { si.classList.add('done'); }
+    else if(i === doneUpTo && n < 5) { si.classList.add('active'); }
+  }
+  if(n===4){for(let i=0;i<4;i++) document.getElementById('si'+i).classList.add('done');}
+  for(let i=0;i<3;i++){
+    if(i < doneUpTo) document.getElementById('sc'+i).classList.add('done');
+  }
+  if(n===4){for(let i=0;i<3;i++) document.getElementById('sc'+i).classList.add('done');}
+}
+
 function go(n){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('s'+n).classList.add('active');
-  document.getElementById('progress').style.width=(n/5*100)+'%';
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+  const screen = document.getElementById('s'+n);
+  screen.style.display='block';
+  // Force reflow then add active for animation
+  screen.offsetHeight;
+  screen.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+  updateSteps(n);
+  // Stagger reveal elements
+  setTimeout(()=>{
+    screen.querySelectorAll('.reveal').forEach((el,i)=>{
+      setTimeout(()=>el.classList.add('visible'), i*120);
+    });
+  },200);
   if(n===1)startTime1=Date.now();
   if(n===3){endTime1=Date.now();startTime2=Date.now();}
 }
 function showDash(){go(5);}
 
+let lastWordCounts = {t1:0, t2:0};
 function updateCount(tid,wcid){
   const text=document.getElementById(tid).value.trim();
   const words=text?text.split(/\s+/).filter(w=>w.length>0).length:0;
   const el=document.getElementById(wcid);
-  el.textContent=words+' word'+(words!==1?'s':'')+(words<30?' — write at least 30 to continue':'');
+  const numEl = el.querySelector('.wc-num');
+  if(numEl) numEl.textContent = words;
+  // Build label text after the num span
+  const suffix = words < 30 ? ' words \u2014 write at least 30 to continue' : ' words';
+  el.innerHTML = '<span class="wc-num">' + words + '</span>' + suffix;
   el.className='word-count'+(words>=30?' good':'');
+  // Bump animation
+  if(words !== lastWordCounts[tid]){
+    el.classList.add('bump');
+    setTimeout(()=>el.classList.remove('bump'),150);
+    lastWordCounts[tid]=words;
+  }
   document.getElementById(tid==='t1'?'btn1':'btn2').disabled=words<30;
+}
+
+const sliderDescs = {1:'Very uncomfortable',2:'Quite uncomfortable',3:'Somewhat uncomfortable',4:'Slightly uncomfortable',5:'Neutral',6:'Slightly comfortable',7:'Somewhat comfortable',8:'Quite comfortable',9:'Very comfortable',10:'Completely at ease'};
+function updateSlider(val){
+  const sv=document.getElementById('sv');
+  sv.textContent=val;
+  sv.classList.add('pop');
+  setTimeout(()=>sv.classList.remove('pop'),200);
+  document.getElementById('slider-desc').textContent=sliderDescs[val]||'';
 }
 
 function analyzeText(text){
@@ -264,54 +458,254 @@ async function analyze(){
   localStorage.setItem('egc_study_completed', JSON.stringify({completed: true, subjectId, timestamp: new Date().toISOString()}));
   go(4);
   const statusEl=document.getElementById('save-status');
-  statusEl.innerHTML='<span class="save-status save-ing">⟳ Saving to research database...</span>';
-  try{const ok=await saveToSupabase(analysisData);statusEl.innerHTML=ok?'<span class="save-status save-ok">✓ Response saved to research database</span>':'<span class="save-status save-err">⚠ Save failed — please screenshot your results</span>';}
-  catch(e){statusEl.innerHTML='<span class="save-status save-err">⚠ Network error — please screenshot your results</span>';}
+  statusEl.innerHTML='<span class="save-status save-ing">\u27F3 Saving to research database...</span>';
+  try{const ok=await saveToSupabase(analysisData);statusEl.innerHTML=ok?'<span class="save-status save-ok">\u2713 Response saved to research database</span>':'<span class="save-status save-err">\u26A0 Save failed \u2014 please screenshot your results</span>';}
+  catch(e){statusEl.innerHTML='<span class="save-status save-err">\u26A0 Network error \u2014 please screenshot your results</span>';}
+}
+
+function classifyType(a1, a2) {
+  const volDrop = a2.wordCount < a1.wordCount;
+  const qualityHolds = a2.T >= a1.T * 0.95;
+  const qualityDrops = a2.T < a1.T * 0.95;
+
+  if (volDrop && qualityHolds) {
+    return {
+      type: 'Compressor',
+      icon: '\u2299', // ⊙
+      color: 'var(--teal)',
+      colorName: 'teal',
+      tagline: 'Under pressure, you say less \u2014 but what you say cuts deeper.',
+      gradient: 'linear-gradient(135deg, rgba(77,255,212,0.12), rgba(77,255,212,0.03))',
+      borderGradient: 'linear-gradient(135deg, var(--teal), rgba(77,255,212,0.3))',
+    };
+  } else if (!volDrop && qualityHolds) {
+    return {
+      type: 'Expander',
+      icon: '\u2726', // ✦
+      color: 'var(--purple)',
+      colorName: 'purple',
+      tagline: "Pressure doesn\u2019t close your gate \u2014 it opens it. You thrive when the stakes rise.",
+      gradient: 'linear-gradient(135deg, rgba(139,127,255,0.12), rgba(139,127,255,0.03))',
+      borderGradient: 'linear-gradient(135deg, var(--purple), rgba(139,127,255,0.3))',
+    };
+  } else {
+    return {
+      type: 'Suppressor',
+      icon: '\u25C7', // ◇
+      color: 'var(--coral)',
+      colorName: 'coral',
+      tagline: 'Your deepest insights live in safe spaces. The gate protects what matters most.',
+      gradient: 'linear-gradient(135deg, rgba(255,107,107,0.12), rgba(255,107,107,0.03))',
+      borderGradient: 'linear-gradient(135deg, var(--coral), rgba(255,107,107,0.3))',
+    };
+  }
+}
+
+function getMeaningParagraph(classification, a1, a2) {
+  const wcChange = a1.wordCount - a2.wordCount;
+  const wcPct = a1.wordCount > 0 ? Math.round(Math.abs(wcChange) / a1.wordCount * 100) : 0;
+  const tChange = ((a2.T - a1.T) / a1.T * 100).toFixed(1);
+  const tDir = a2.T >= a1.T ? 'increased' : 'decreased';
+
+  const wcPhrase = wcChange > 0
+    ? `You wrote ${a1.wordCount} words freely, then ${a2.wordCount} under evaluation \u2014 a ${wcPct}% compression.`
+    : `You wrote ${a1.wordCount} words freely, then ${a2.wordCount} under evaluation \u2014 a ${wcPct}% expansion.`;
+
+  const tPhrase = `Your transmission fidelity (T) ${tDir} by ${Math.abs(tChange)}%, going from ${a1.T.toFixed(3)} to ${a2.T.toFixed(3)}.`;
+
+  if (classification.type === 'Compressor') {
+    return `${wcPhrase} ${tPhrase} This is the Compressor pattern: evaluative pressure activates a density mechanism. You edit in real time, cutting volume while preserving or refining signal quality. In conversations, you might be the person who waits, then delivers one precise sentence that changes the direction of the room. Compressors tend to do their best thinking in focused, high-stakes environments where economy of language is valued \u2014 editing, strategy, design critique. Your gate narrows the channel without losing fidelity.`;
+  } else if (classification.type === 'Expander') {
+    return `${wcPhrase} ${tPhrase} This is the Expander pattern: evaluative pressure opens the gate wider. Where others contract, you generate more \u2014 and maintain quality while doing it. In real life, you likely come alive in presentations, debates, and high-stakes conversations. Expanders often have high conviction (K) that overrides evaluative resistance. Pressure fuels rather than constrains you. You thrive in environments where the audience is real, the feedback is immediate, and the stakes are tangible.`;
+  } else {
+    return `${wcPhrase} ${tPhrase} This is the Suppressor pattern: evaluative pressure engages a protective mechanism. Your gate constricts both volume and fidelity under scrutiny \u2014 not because you lack depth, but because your richest expression requires psychological safety. In practice, you likely share your most profound ideas in trusted one-on-one conversations, late-night journals, or with people who have earned access. Suppressors often benefit from environments with low judgment and high trust \u2014 the insight is there, the gate just needs to feel safe to open.`;
+  }
+}
+
+function animateCounter(el, target, duration, decimals) {
+  const start = 0;
+  const startTime = performance.now();
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const current = start + (target - start) * eased;
+    el.textContent = decimals !== undefined ? current.toFixed(decimals) : Math.round(current);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
 }
 
 function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed){
-  const metrics=[
-    {label:'Transmission T',v1:a1.T,v2:a2.T},
-    {label:'Shannon Entropy',v1:a1.entropy,v2:a2.entropy},
-    {label:'Lexical Diversity',v1:a1.ttr,v2:a2.ttr},
-    {label:'Idea Density',v1:a1.ideaDensity,v2:a2.ideaDensity},
-    {label:'Completion Rate',v1:a1.completionRate,v2:a2.completionRate},
-    {label:'Word Count',v1:a1.wordCount,v2:a2.wordCount},
-  ];
-  let mh='<div class="metric-grid">';
-  metrics.forEach(m=>{
-    const diff=+(m.v2-m.v1).toFixed(3);
-    const pct=m.v1>0?Math.abs(+(diff/m.v1*100).toFixed(0)):0;
-    const down=diff<-0.01,up=diff>0.01;
-    const cls=down?'delta-down':up?'delta-up':'delta-same';
-    const sym=down?'↓':up?'↑':'→';
-    const dv=typeof m.v2==='number'&&m.v2>10?m.v2:m.v2.toFixed(3);
-    mh+=`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="color:${down?'var(--red)':up?'var(--teal)':'var(--grey-light)'}">${dv}</div><div class="metric-delta ${cls}">${sym} ${pct>0?pct+'%':'no change'} vs Task 1</div></div>`;
-  });
-  mh+='</div>';
-  const vc=confirmed?'var(--red)':T_drop<-0.02?'var(--teal)':'var(--grey-light)';
-  const vt=confirmed?'T dropped — EGC prediction supported':T_drop<-0.02?'T increased — high K may have offset r':'T stable across conditions';
-  const ve=confirmed?'↓':T_drop<-0.02?'↑':'→';
-  const desc=confirmed?`Your transmission fidelity dropped <strong style="color:var(--red)">${T_drop_pct}%</strong> when writing for evaluation. Consistent with the EGC prediction that evaluative pressure increases resistance and reduces expression output.`:T_drop<-0.02?`Your transmission fidelity increased under evaluative pressure. This may indicate high conviction (K) offsetting resistance — formal framing activated deeper expression for you.`:`Your expression remained stable across conditions — suggesting low baseline resistance or high conviction maintaining output quality regardless of context.`;
+  const cls = classifyType(a1, a2);
+  const meaning = getMeaningParagraph(cls, a1, a2);
+
+  // Normalize bar widths
+  const maxWC = Math.max(a1.wordCount, a2.wordCount, 1);
+  const maxEntropy = Math.max(a1.entropy, a2.entropy, 0.1);
+  const maxT = Math.max(a1.T, a2.T, 0.1);
+
+  const shareText = `I'm a ${cls.type} \u2014 ${cls.tagline.toLowerCase()} Take the Gate Assessment: https://theartofsound.github.io/egcstudy/`;
+
   document.getElementById('results-content').innerHTML=`
-    <div class="verdict-box">
-      <div class="label">T Change (Task 1 → Task 2)</div>
-      <div class="verdict-score" style="color:${vc}">${ve} ${Math.abs(T_drop_pct).toFixed(1)}%</div>
-      <div class="verdict-label">${vt}</div>
-      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px">
-        <span class="tag tag-teal">Task 1 T = ${a1.T.toFixed(3)}</span>
-        <span class="tag tag-${confirmed?'red':'purple'}">Task 2 T = ${a2.T.toFixed(3)}</span>
-        <span class="tag tag-purple">r proxy = ${r_proxy.toFixed(2)}</span>
-        <span class="tag tag-teal">K proxy = ${K_proxy.toFixed(2)}</span>
+    <!-- Hero Type Card -->
+    <div class="hero-type-card" style="--hero-border-gradient:${cls.borderGradient};background:${cls.gradient};">
+      <div class="label" style="color:${cls.color}">Your Expression Type</div>
+      <div class="type-icon glowing" style="color:${cls.color};--glow-color:${cls.color}">${cls.icon}</div>
+      <div class="type-name">${cls.type}</div>
+      <div class="type-tagline">${cls.tagline}</div>
+    </div>
+
+    <!-- What This Means -->
+    <div class="meaning-card" style="animation:fadeUp 0.6s ease 0.3s both;">
+      <h3>What this means for you</h3>
+      <p style="font-size:14px;line-height:1.8;margin-bottom:0;">${meaning}</p>
+    </div>
+
+    <!-- Visual Comparison -->
+    <div class="comparison-section" style="animation:fadeUp 0.6s ease 0.5s both;">
+      <div class="label" style="margin-bottom:20px;">Task 1 vs Task 2 Comparison</div>
+
+      <div class="comparison-row">
+        <div class="comparison-label">Word Count</div>
+        <div class="bar-pair">
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 1</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t1" style="--target-width:${(a1.wordCount/maxWC*100).toFixed(1)}%;animation-delay:0.6s;"></div></div>
+            <div class="bar-value" data-count="${a1.wordCount}" data-decimals="0">${a1.wordCount}</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 2</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t2" style="--target-width:${(a2.wordCount/maxWC*100).toFixed(1)}%;animation-delay:0.7s;"></div></div>
+            <div class="bar-value" data-count="${a2.wordCount}" data-decimals="0">${a2.wordCount}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="comparison-label">Shannon Entropy (Information Density)</div>
+        <div class="bar-pair">
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 1</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t1" style="--target-width:${(a1.entropy/maxEntropy*100).toFixed(1)}%;animation-delay:0.8s;"></div></div>
+            <div class="bar-value">${a1.entropy.toFixed(3)}</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 2</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t2" style="--target-width:${(a2.entropy/maxEntropy*100).toFixed(1)}%;animation-delay:0.9s;"></div></div>
+            <div class="bar-value">${a2.entropy.toFixed(3)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-row">
+        <div class="comparison-label">Transmission Fidelity (T Score)</div>
+        <div class="bar-pair">
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 1</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t1" style="--target-width:${(a1.T/maxT*100).toFixed(1)}%;animation-delay:1.0s;"></div></div>
+            <div class="bar-value">${a1.T.toFixed(3)}</div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-tag">Task 2</div>
+            <div class="bar-track"><div class="bar-fill bar-fill-t2" style="--target-width:${(a2.T/maxT*100).toFixed(1)}%;animation-delay:1.1s;"></div></div>
+            <div class="bar-value">${a2.T.toFixed(3)}</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="label" style="margin-top:20px">Metric Breakdown</div>${mh}
-    <div class="card card-purple" style="margin-top:20px"><div class="label">What This Means</div><p style="margin-bottom:0;font-size:14px">${desc}</p></div>`;
+
+    <!-- Science Section -->
+    <div style="animation:fadeUp 0.6s ease 0.7s both;">
+      <div class="science-toggle" onclick="toggleScience(this)">
+        <span>How we measured this</span>
+        <span class="arrow">\u25BC</span>
+      </div>
+      <div class="science-content" id="science-content">
+        <div class="science-inner">
+          <div class="science-item">
+            <h4>Shannon Entropy</h4>
+            <p>Measures information density in your writing. Higher entropy means your words carry more unique information \u2014 less repetition, more signal per word. Think of it like compression: dense writing packs more meaning into fewer words.</p>
+          </div>
+          <div class="science-item">
+            <h4>Type-Token Ratio (TTR)</h4>
+            <p>Measures vocabulary richness \u2014 the ratio of unique words to total words. A higher ratio means you drew from a wider vocabulary rather than repeating the same words. It captures lexical diversity independent of length.</p>
+          </div>
+          <div class="science-item">
+            <h4>Idea Density</h4>
+            <p>The proportion of content words (nouns, verbs, adjectives) versus function words (the, is, and). Higher idea density means more of your writing carries substantive meaning rather than grammatical scaffolding.</p>
+          </div>
+          <div class="science-item">
+            <h4>Transmission Fidelity (T)</h4>
+            <p>The composite score combining entropy, vocabulary richness, idea density, and sentence completeness. T represents how much of your internal signal makes it through to the written page \u2014 how faithfully your expression transmits what you actually think and feel.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anti-spoiler Notice + Share Card -->
+    <div class="share-card" style="animation:fadeUp 0.6s ease 0.9s both;">
+      <div class="label" style="color:var(--teal)">Share This Study</div>
+      <div style="background:rgba(77,255,212,.06);border:1px solid var(--teal-dim);border-radius:10px;padding:16px;margin:12px 0;text-align:left;">
+        <p style="font-size:13px;line-height:1.7;color:var(--grey-light);margin:0;">
+          <strong style="color:var(--white);">Please don't reveal what this study measures.</strong><br>
+          If participants know what we're looking for, it changes how they write and the data becomes less accurate. Just share the link and let them experience it fresh. The science depends on it.
+        </p>
+      </div>
+      <div class="share-text" id="share-text">${shareText}</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+        <button class="copy-btn" onclick="copyShare(this)" style="flex:1;min-width:140px;">
+          <span>\u2398</span> Copy text
+        </button>
+        <button class="copy-btn" onclick="copyLink(this)" style="flex:1;min-width:140px;background:var(--teal);color:#0d0f14;">
+          <span>\u{1F517}</span> Copy link
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
+        <a href="https://twitter.com/intent/tweet?text=I%20just%20took%20a%2010-minute%20writing%20study%20%E2%80%94%20the%20results%20surprised%20me.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">X / Twitter</a>
+        <a href="https://wa.me/?text=I%20just%20took%20a%20really%20interesting%2010-minute%20writing%20study.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">WhatsApp</a>
+        <a href="sms:?body=I%20just%20took%20a%2010-minute%20writing%20study%20and%20the%20results%20were%20fascinating.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">SMS</a>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section" style="animation:fadeUp 0.6s ease 1.1s both;">
+      <p class="muted" style="margin-bottom:16px;font-size:13px">Your anonymous response has been saved to the research database.</p>
+      <a href="https://theartofsound.github.io/thegate/" target="_blank" class="btn btn-purple" style="text-decoration:none;">
+        Explore The Gate \u2192
+      </a>
+      <div style="margin-top:12px;">
+        <button class="btn btn-secondary" onclick="showDash()" style="font-size:11px;">View Live Results Dashboard \u2192</button>
+      </div>
+    </div>
+  `;
 }
 
-// UPDATED DASHBOARD SECTION ONLY
-// Replace the loadDash() function in egc_study.html with this version
-// Everything else in the file stays identical
+function toggleScience(el){
+  el.classList.toggle('open');
+  document.getElementById('science-content').classList.toggle('open');
+}
+
+function copyLink(btn){
+  navigator.clipboard.writeText('https://theartofsound.github.io/egcstudy/').then(()=>{
+    const orig=btn.innerHTML;
+    btn.innerHTML='<span>✓</span> Copied!';
+    btn.style.background='var(--teal)';btn.style.color='#0d0f14';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='var(--teal)';btn.style.color='#0d0f14';},2000);
+  });
+}
+
+function copyShare(btn){
+  const text = document.getElementById('share-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.classList.add('copied');
+    btn.innerHTML = '<span>\u2713</span> Copied!';
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      btn.innerHTML = '<span>\u2398</span> Copy to clipboard';
+    }, 2000);
+  });
+}
 
 async function checkPw(){
   const pw=document.getElementById('admin-pw').value;
@@ -335,7 +729,7 @@ async function loadDash(){
   if(!rows.length){
     document.getElementById('d-n').textContent='0';
     document.getElementById('d-confirmed').textContent='0%';
-    document.getElementById('d-pct').textContent='—';
+    document.getElementById('d-pct').textContent='\u2014';
     document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">No responses yet. Share the study link to collect data.</p>';
     return;
   }
@@ -360,7 +754,7 @@ async function loadDash(){
   const avgWC1=(volDrops.reduce((a,v)=>a+v.wc1,0)/n).toFixed(0);
   const avgWC2=(volDrops.reduce((a,v)=>a+v.wc2,0)/n).toFixed(0);
 
-  // Brandyn divergence — volume down AND T stable/up
+  // Brandyn divergence
   const divergence=rows.filter((r,i)=>volDrops[i].drop>0 && r.t2_score>=r.t1_score).length;
 
   // Other
@@ -378,16 +772,16 @@ async function loadDash(){
 
   document.getElementById('dash-metrics').innerHTML=`
     <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">TRANSMISSION FIDELITY (T)</div>
-    <div class="dash-row"><span class="dash-row-label">Mean T — Task 1 (free writing)</span><span class="dash-row-value" style="color:var(--teal)">${avgT1}</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean T — Task 2 (evaluative)</span><span class="dash-row-value">${avgT2}</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 1 (free writing)</span><span class="dash-row-value" style="color:var(--teal)">${avgT1}</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 2 (evaluative)</span><span class="dash-row-value">${avgT2}</span></div>
     <div class="dash-row"><span class="dash-row-label">T drop confirmed (>2%)</span><span class="dash-row-value">${confirmed} / ${n} (${confPct}%)</span></div>
 
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin:16px 0 12px">VOLUME — BRANDYN'S DENSITY-VOLUME DIVERGENCE</div>
-    <div class="dash-row"><span class="dash-row-label">Mean word count — Task 1</span><span class="dash-row-value" style="color:var(--teal)">${avgWC1} words</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean word count — Task 2</span><span class="dash-row-value" style="color:var(--red)">${avgWC2} words</span></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin:16px 0 12px">VOLUME \u2014 BRANDYN'S DENSITY-VOLUME DIVERGENCE</div>
+    <div class="dash-row"><span class="dash-row-label">Mean word count \u2014 Task 1</span><span class="dash-row-value" style="color:var(--teal)">${avgWC1} words</span></div>
+    <div class="dash-row"><span class="dash-row-label">Mean word count \u2014 Task 2</span><span class="dash-row-value" style="color:var(--red)">${avgWC2} words</span></div>
     <div class="dash-row"><span class="dash-row-label">Subjects writing fewer words under evaluation</span><span class="dash-row-value" style="color:var(--orange)">${volDown} / ${n} (${Math.round(volDown/n*100)}%)</span></div>
     <div class="dash-row"><span class="dash-row-label">Mean volume reduction</span><span class="dash-row-value">${avgVolPct}%</span></div>
-    <div class="dash-row"><span class="dash-row-label">Density-volume divergence (vol↓ + T stable/up)</span><span class="dash-row-value" style="color:var(--purple)">${divergence} / ${n} subjects</span></div>
+    <div class="dash-row"><span class="dash-row-label">Density-volume divergence (vol\u2193 + T stable/up)</span><span class="dash-row-value" style="color:var(--purple)">${divergence} / ${n} subjects</span></div>
 
     <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin:16px 0 12px">PROXIES</div>
     <div class="dash-row"><span class="dash-row-label">Mean comfort rating</span><span class="dash-row-value">${avgComfort} / 10</span></div>
@@ -399,11 +793,11 @@ async function loadDash(){
     const volDir=vd.drop>0;
     const diverg=volDir && r.t2_score>=r.t1_score;
     return`<div class="dash-row">
-      <span class="dash-row-label">${r.subject_id||'S'+i} · ${new Date(r.created_at).toLocaleDateString()}</span>
+      <span class="dash-row-label">${r.subject_id||'S'+i} \u00B7 ${new Date(r.created_at).toLocaleDateString()}</span>
       <span style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <span class="tag tag-teal" style="font-size:10px">T1=${(r.t1_score||0).toFixed(2)}</span>
         <span class="tag tag-${r.t2_score<r.t1_score?'teal':'red'}" style="font-size:10px">T2=${(r.t2_score||0).toFixed(2)}</span>
-        <span class="tag tag-${volDir?'red':'purple'}" style="font-size:10px">${vd.wc1}→${vd.wc2}w ${volDir?'↓':'↑'}</span>
+        <span class="tag tag-${volDir?'red':'purple'}" style="font-size:10px">${vd.wc1}\u2192${vd.wc2}w ${volDir?'\u2193':'\u2191'}</span>
         ${diverg?'<span class="tag tag-purple" style="font-size:10px">divergence</span>':''}
       </span>
     </div>`;
