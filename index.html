@@ -261,6 +261,7 @@ async function analyze(){
   const prediction_confirmed=T_drop>0.02;
   analysisData={subjectId,timestamp:new Date().toISOString(),comfort_rating:comfort,r_proxy,K_proxy,task1:{...a1,duration_ms:endTime1-startTime1},task2:{...a2,duration_ms:endTime2-startTime2},T_drop,T_drop_pct,prediction_confirmed};
   renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,prediction_confirmed);
+  localStorage.setItem('egc_study_completed', JSON.stringify({completed: true, subjectId, timestamp: new Date().toISOString()}));
   go(4);
   const statusEl=document.getElementById('save-status');
   statusEl.innerHTML='<span class="save-status save-ing">⟳ Saving to research database...</span>';
@@ -312,9 +313,12 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
 // Replace the loadDash() function in egc_study.html with this version
 // Everything else in the file stays identical
 
-function checkPw(){
+async function checkPw(){
   const pw=document.getElementById('admin-pw').value;
-  if(pw==='Awdrjki100010101110e!'){
+  const encoder=new TextEncoder();
+  const hashBuffer=await crypto.subtle.digest('SHA-256',encoder.encode(pw));
+  const hashHex=Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(hashHex==='b461a6b698db9076f2ee4733c571ad404de044b3d766d00121b1c5a9e8df50f2'){
     document.getElementById('auth-wall').style.display='none';
     document.getElementById('dash-content').style.display='block';
     loadDash();
