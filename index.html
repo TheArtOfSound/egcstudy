@@ -432,7 +432,7 @@ function analyzeText(text){
 }
 
 async function saveToSupabase(data){
-  const row={subject_id:data.subjectId,comfort_rating:data.comfort_rating,r_proxy:data.r_proxy,k_proxy:data.K_proxy,t1_score:data.task1.T,t2_score:data.task2.T,t_drop:data.T_drop,t_drop_pct:data.T_drop_pct,t1_wordcount:data.task1.wordCount,t2_wordcount:data.task2.wordCount,t1_entropy:data.task1.entropy,t2_entropy:data.task2.entropy,t1_ttr:data.task1.ttr,t2_ttr:data.task2.ttr,t1_idea_density:data.task1.ideaDensity,t2_idea_density:data.task2.ideaDensity,prediction_confirmed:data.prediction_confirmed,full_data:data};
+  const row={subject_id:data.subjectId,comfort_rating:data.comfort_rating,r_proxy:data.r_proxy,k_proxy:data.K_proxy,t1_score:data.task1.T,t2_score:data.task2.T,t_drop:data.T_drop,t_drop_pct:data.T_drop_pct,t1_wordcount:data.task1.wordCount,t2_wordcount:data.task2.wordCount,t1_entropy:data.task1.entropy,t2_entropy:data.task2.entropy,t1_ttr:data.task1.ttr,t2_ttr:data.task2.ttr,t1_idea_density:data.task1.ideaDensity,t2_idea_density:data.task2.ideaDensity,prediction_confirmed:data.prediction_confirmed,full_data:data,t1_text:data.t1_text,t2_text:data.t2_text};
   const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify(row)});
   return res.ok;
 }
@@ -453,7 +453,7 @@ async function analyze(){
   const T_drop=+(a1.T-a2.T).toFixed(3);
   const T_drop_pct=a1.T>0?+((T_drop/a1.T)*100).toFixed(1):0;
   const prediction_confirmed=T_drop>0.02;
-  analysisData={subjectId,timestamp:new Date().toISOString(),comfort_rating:comfort,r_proxy,K_proxy,task1:{...a1,duration_ms:endTime1-startTime1},task2:{...a2,duration_ms:endTime2-startTime2},T_drop,T_drop_pct,prediction_confirmed};
+  analysisData={subjectId,timestamp:new Date().toISOString(),comfort_rating:comfort,r_proxy,K_proxy,task1:{...a1,duration_ms:endTime1-startTime1},task2:{...a2,duration_ms:endTime2-startTime2},T_drop,T_drop_pct,prediction_confirmed,t1_text:t1text,t2_text:t2text};
   renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,prediction_confirmed);
   localStorage.setItem('egc_study_completed', JSON.stringify({completed: true, subjectId, timestamp: new Date().toISOString()}));
   go(4);
