@@ -545,7 +545,7 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
   const maxEntropy = Math.max(a1.entropy, a2.entropy, 0.1);
   const maxT = Math.max(a1.T, a2.T, 0.1);
 
-  const shareText = `I'm a ${cls.type} \u2014 ${cls.tagline.toLowerCase()} Take the Gate Assessment: https://theartofsound.github.io/egcstudy/`;
+  const shareText = `I just took a 10-minute writing study and learned something surprising about how I express myself. Try it: https://theartofsound.github.io/egcstudy/`;
 
   document.getElementById('results-content').innerHTML=`
     <!-- Hero Type Card -->
@@ -662,9 +662,9 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
         </button>
       </div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
-        <a href="https://twitter.com/intent/tweet?text=I%20just%20took%20a%2010-minute%20writing%20study%20%E2%80%94%20the%20results%20surprised%20me.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">X / Twitter</a>
-        <a href="https://wa.me/?text=I%20just%20took%20a%20really%20interesting%2010-minute%20writing%20study.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">WhatsApp</a>
-        <a href="sms:?body=I%20just%20took%20a%2010-minute%20writing%20study%20and%20the%20results%20were%20fascinating.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">SMS</a>
+        <a href="https://twitter.com/intent/tweet?text=I%20just%20took%20a%2010-minute%20writing%20study%20and%20learned%20something%20surprising%20about%20how%20I%20express%20myself.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">X / Twitter</a>
+        <a href="https://wa.me/?text=I%20just%20took%20a%2010-minute%20writing%20study%20and%20learned%20something%20surprising%20about%20how%20I%20express%20myself.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">WhatsApp</a>
+        <a href="sms:?body=I%20just%20took%20a%2010-minute%20writing%20study%20and%20learned%20something%20surprising%20about%20how%20I%20express%20myself.%20Try%20it%3A%20https%3A%2F%2Ftheartofsound.github.io%2Fegcstudy%2F" class="copy-btn" style="text-decoration:none;flex:1;min-width:80px;">SMS</a>
       </div>
     </div>
 
@@ -680,7 +680,7 @@ function renderResults(a1,a2,T_drop,T_drop_pct,comfort,r_proxy,K_proxy,confirmed
     <div class="cta-section" style="animation:fadeUp 0.6s ease 1.1s both;">
       <p class="muted" style="margin-bottom:16px;font-size:13px">Your anonymous response has been saved to the research database.</p>
       <a href="https://theartofsound.github.io/thegate/" target="_blank" class="btn btn-purple" style="text-decoration:none;">
-        Explore The Gate \u2192
+        What is this research about? \u2192
       </a>
       <div style="margin-top:12px;">
         <button class="btn btn-secondary" onclick="showDash()" style="font-size:11px;">View Live Results Dashboard \u2192</button>
