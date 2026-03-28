@@ -178,6 +178,26 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
 .welcome-step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;background:rgba(77,255,212,0.1);color:var(--teal);border:1px solid rgba(77,255,212,0.2);}
 .welcome-step-text{font-size:15px;line-height:1.6;padding-top:4px;}
 
+/* Consent screen */
+.consent-screen{position:fixed;inset:0;z-index:200;background:var(--bg);overflow-y:auto;}
+.consent-inner{max-width:680px;margin:0 auto;padding:48px 24px 80px;}
+.consent-header{text-align:center;margin-bottom:40px;}
+.consent-header h1{font-family:'DM Serif Display',serif;font-size:clamp(24px,4vw,34px);color:var(--white);font-weight:400;margin-bottom:8px;}
+.consent-header .consent-subtitle{font-family:'Lora',serif;font-size:15px;color:var(--text);font-style:italic;}
+.consent-section{margin-bottom:24px;}
+.consent-section h3{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+.consent-section p,.consent-section ul{font-size:14px;line-height:1.75;color:var(--text);margin-bottom:8px;}
+.consent-section ul{padding-left:20px;}
+.consent-section li{margin-bottom:6px;}
+.consent-actions{text-align:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--border);}
+.consent-actions .btn{width:100%;max-width:420px;justify-content:center;margin-bottom:12px;}
+.consent-decline{display:block;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--grey);cursor:pointer;background:none;border:none;padding:8px;margin:8px auto 0;text-decoration:none;transition:color .2s;}
+.consent-decline:hover{color:var(--grey-light);}
+
+/* Decline screen */
+.decline-screen{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.decline-inner{text-align:center;padding:24px;max-width:480px;}
+
 /* Responsive */
 @media(max-width:600px){
   .container{padding:80px 16px 40px;}
@@ -192,6 +212,86 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
 </style>
 </head>
 <body>
+
+<!-- Consent Screen -->
+<div class="consent-screen" id="consent-screen">
+  <div class="consent-inner">
+    <div class="consent-header">
+      <div class="label">Informed Consent</div>
+      <h1>Expression-Gated Consciousness: An Empirical Study</h1>
+      <p class="consent-subtitle">Expressive Suppression and Psychological Transparency</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Principal Investigators</h3>
+      <p>Bryan Leonard and Brandyn Leonard<br>Qira LLC, Phoenix, Arizona</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Purpose of the Study</h3>
+      <p>This study examines how the act of expressing thoughts and feelings affects psychological clarity and self-awareness. You will be asked to write briefly about a recent experience and answer questions about how expression affects your inner experience. The study takes approximately 5&#8211;10 minutes.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>What Participation Involves</h3>
+      <ul>
+        <li>Reading a brief prompt and writing a short response (2&#8211;5 sentences)</li>
+        <li>Answering questions about your experience of expression and suppression</li>
+        <li>All responses are anonymous &#8212; no name, email, or identifying information is collected</li>
+        <li>Your anonymous response data will be used in academic research on consciousness and expression</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h3>Voluntary Participation</h3>
+      <p>Participation is completely voluntary. You may stop at any time without consequence. There is no penalty for not participating or for withdrawing.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Risks</h3>
+      <p>This study involves reflection on personal emotional experiences. Some participants may find this mildly uncomfortable. If you feel distressed at any point, you may stop immediately. This study is not therapy and the researchers are not clinicians.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Benefits</h3>
+      <p>There is no direct benefit to you for participating. The research contributes to scientific understanding of how expression shapes conscious experience.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Confidentiality</h3>
+      <p>Your responses are completely anonymous. No identifying information is collected. Data is stored securely and will only be reported in aggregate or as anonymized case examples in academic publications.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Data Use</h3>
+      <p>Anonymous response data may be published in peer-reviewed academic journals, presented at conferences, and used to inform further research on consciousness and expression.</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>Contact</h3>
+      <p>For questions about this research, contact <a href="mailto:bryan@qira.ai" style="color:var(--teal);text-decoration:none;">bryan@qira.ai</a></p>
+    </div>
+
+    <div class="consent-section">
+      <h3>IRB Status</h3>
+      <p>This study has not been formally reviewed by an Institutional Review Board. Participation is voluntary and all data is anonymous.</p>
+    </div>
+
+    <div class="consent-actions">
+      <button class="btn btn-primary" onclick="acceptConsent()">I understand and agree to participate &#8594;</button>
+      <button class="consent-decline" onclick="declineConsent()">No thank you, I do not wish to participate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Decline Screen -->
+<div class="decline-screen" id="decline-screen" style="display:none;">
+  <div class="decline-inner">
+    <div style="font-size:48px;margin-bottom:24px;">&#128591;</div>
+    <h2 style="font-family:'DM Serif Display',serif;color:var(--white);margin-bottom:16px;">Thank you for your time.</h2>
+    <p style="color:var(--text);font-size:15px;line-height:1.7;">You have chosen not to participate. You may close this window.</p>
+  </div>
+</div>
 
 <div class="bg-gradient"></div>
 
@@ -333,6 +433,27 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const TABLE='egc_responses';
 let subjectId='S'+Date.now().toString(36).toUpperCase();
 let startTime1,startTime2,endTime1,endTime2,analysisData={};
+let consentedAt=null;
+
+// Consent flow
+(function(){
+  if(sessionStorage.getItem('egc_consent')==='true'){
+    consentedAt=sessionStorage.getItem('egc_consent_ts');
+    document.getElementById('consent-screen').style.display='none';
+  }
+})();
+
+function acceptConsent(){
+  consentedAt=new Date().toISOString();
+  sessionStorage.setItem('egc_consent','true');
+  sessionStorage.setItem('egc_consent_ts',consentedAt);
+  document.getElementById('consent-screen').style.display='none';
+}
+
+function declineConsent(){
+  document.getElementById('consent-screen').style.display='none';
+  document.getElementById('decline-screen').style.display='flex';
+}
 
 // Step icons and connectors
 const stepMap = {0:[0], 1:[0], 2:[0,1], 3:[0,1,2], 4:[0,1,2,3], 5:[]};
@@ -432,7 +553,7 @@ function analyzeText(text){
 }
 
 async function saveToSupabase(data){
-  const row={subject_id:data.subjectId,comfort_rating:data.comfort_rating,r_proxy:data.r_proxy,k_proxy:data.K_proxy,t1_score:data.task1.T,t2_score:data.task2.T,t_drop:data.T_drop,t_drop_pct:data.T_drop_pct,t1_wordcount:data.task1.wordCount,t2_wordcount:data.task2.wordCount,t1_entropy:data.task1.entropy,t2_entropy:data.task2.entropy,t1_ttr:data.task1.ttr,t2_ttr:data.task2.ttr,t1_idea_density:data.task1.ideaDensity,t2_idea_density:data.task2.ideaDensity,prediction_confirmed:data.prediction_confirmed,full_data:data,t1_text:data.t1_text,t2_text:data.t2_text};
+  const row={subject_id:data.subjectId,comfort_rating:data.comfort_rating,r_proxy:data.r_proxy,k_proxy:data.K_proxy,t1_score:data.task1.T,t2_score:data.task2.T,t_drop:data.T_drop,t_drop_pct:data.T_drop_pct,t1_wordcount:data.task1.wordCount,t2_wordcount:data.task2.wordCount,t1_entropy:data.task1.entropy,t2_entropy:data.task2.entropy,t1_ttr:data.task1.ttr,t2_ttr:data.task2.ttr,t1_idea_density:data.task1.ideaDensity,t2_idea_density:data.task2.ideaDensity,prediction_confirmed:data.prediction_confirmed,full_data:data,t1_text:data.t1_text,t2_text:data.t2_text,consented_at:consentedAt,consent_version:'v1.0'};
   const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify(row)});
   return res.ok;
 }
