@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EGC Study — Blind Rating</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--bg2:#141720;--card:#1a1d28;
+  --teal:#4dffd4;--purple:#8b7fff;
+  --text:#e0e0e6;--text2:#9a9ab0;
+  --glass:rgba(26,29,40,.65);--glass-border:rgba(77,255,212,.12);
+}
+html{font-size:16px}
+body{
+  font-family:'Lora',Georgia,serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:1.5rem;line-height:1.6;
+}
+h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400;color:#fff}
+.mono{font-family:'DM Mono',monospace}
+.screen{display:none;width:100%;max-width:640px;animation:fadeUp .4s ease}
+.screen.active{display:flex;flex-direction:column;align-items:center}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Glass card */
+.card{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  padding:2rem;width:100%;
+  box-shadow:0 4px 30px rgba(0,0,0,.35);
+}
+
+/* Inputs */
+input[type="text"]{
+  width:100%;padding:.85rem 1.1rem;
+  background:var(--bg2);border:1px solid var(--glass-border);
+  border-radius:10px;color:#fff;font-family:'DM Mono',monospace;
+  font-size:1rem;outline:none;transition:border .2s;
+}
+input[type="text"]:focus{border-color:var(--teal)}
+input[type="text"]::placeholder{color:var(--text2)}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:.85rem 2rem;border:none;border-radius:10px;
+  font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;
+  cursor:pointer;transition:all .2s;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  color:var(--bg);
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(77,255,212,.25)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.45;pointer-events:none}
+
+/* Slider */
+.slider-group{margin-bottom:1.6rem}
+.slider-label{
+  font-family:'DM Mono',monospace;font-size:.82rem;
+  color:var(--teal);margin-bottom:.35rem;display:block;
+}
+.slider-question{font-size:.95rem;margin-bottom:.6rem;color:var(--text)}
+.slider-row{display:flex;align-items:center;gap:.75rem}
+.slider-row span{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text2);min-width:2ch;text-align:center}
+.slider-val{color:#fff;font-size:1.1rem;min-width:2.5ch;text-align:right}
+input[type="range"]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:6px;border-radius:3px;outline:none;
+  background:linear-gradient(90deg,var(--purple),var(--teal));
+  opacity:.7;transition:opacity .2s;
+}
+input[type="range"]:hover{opacity:1}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;border-radius:50%;
+  background:#fff;border:3px solid var(--teal);
+  cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+input[type="range"]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;
+  background:#fff;border:3px solid var(--teal);
+  cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.anchor-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);margin-top:.2rem}
+
+/* Progress */
+.progress-wrap{width:100%;margin-bottom:1.5rem}
+.progress-info{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.4rem}
+.progress-info span{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text2)}
+.progress-bar{width:100%;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--teal));transition:width .35s ease}
+
+/* Text display */
+.text-display{
+  background:var(--bg2);border-radius:12px;padding:1.5rem;
+  margin-bottom:1.8rem;max-height:45vh;overflow-y:auto;
+  border:1px solid rgba(255,255,255,.05);
+  font-size:1.05rem;line-height:1.75;white-space:pre-wrap;
+}
+.text-display::-webkit-scrollbar{width:6px}
+.text-display::-webkit-scrollbar-track{background:transparent}
+.text-display::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:3px}
+
+/* Error */
+.error{color:#ff6b6b;font-family:'DM Mono',monospace;font-size:.82rem;margin-top:.5rem;min-height:1.2em}
+
+/* Completion */
+.completion-icon{font-size:3rem;margin-bottom:1rem}
+.stat{font-family:'DM Mono',monospace;font-size:2rem;color:var(--teal)}
+
+/* Spacing helpers */
+.mb1{margin-bottom:1rem}.mb2{margin-bottom:2rem}.mt1{margin-top:1rem}.mt2{margin-top:2rem}
+.center{text-align:center}
+
+/* Loading spinner */
+.spinner{
+  width:36px;height:36px;border:3px solid var(--glass-border);
+  border-top-color:var(--teal);border-radius:50%;
+  animation:spin .7s linear infinite;margin:2rem auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:480px){
+  body{padding:1rem}
+  .card{padding:1.4rem}
+  .text-display{padding:1rem;font-size:.95rem;max-height:35vh}
+  h1{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="screen active">
+  <h1 class="mb2">EGC Blind Rating</h1>
+  <div class="card">
+    <label class="slider-label mb1" for="rater-input">RATER CODE</label>
+    <input type="text" id="rater-input" placeholder="e.g. rater_A" autocomplete="off" spellcheck="false">
+    <div id="login-error" class="error"></div>
+    <button id="login-btn" class="btn mt2" style="width:100%">Enter</button>
+  </div>
+  <p class="mono center mt2" style="font-size:.75rem;color:var(--text2)">Expression-Gated Consciousness Study</p>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" class="screen">
+  <h2>Loading texts&hellip;</h2>
+  <div class="spinner"></div>
+  <p class="mono" style="color:var(--text2);font-size:.85rem">Preparing your queue</p>
+</div>
+
+<!-- RATING SCREEN -->
+<div id="rating-screen" class="screen">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="progress-label">Rating 1 of 80</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <div id="text-display" class="text-display"></div>
+
+    <div class="slider-group">
+      <span class="slider-label">RICHNESS</span>
+      <p class="slider-question">How rich and detailed is the expression in this writing?</p>
+      <div class="slider-row">
+        <span>1</span>
+        <input type="range" id="slider-richness" min="1" max="10" value="5" step="1">
+        <span class="slider-val" id="val-richness">5</span>
+      </div>
+      <div class="anchor-labels"><span>bare minimum</span><span>rich &amp; layered</span></div>
+    </div>
+
+    <div class="slider-group">
+      <span class="slider-label">VOICE</span>
+      <p class="slider-question">How much does this writing convey a distinct personal voice?</p>
+      <div class="slider-row">
+        <span>1</span>
+        <input type="range" id="slider-voice" min="1" max="10" value="5" step="1">
+        <span class="slider-val" id="val-voice">5</span>
+      </div>
+      <div class="anchor-labels"><span>generic</span><span>clearly individual</span></div>
+    </div>
+
+    <div class="slider-group">
+      <span class="slider-label">DEPTH</span>
+      <p class="slider-question">How much depth of thought is expressed here?</p>
+      <div class="slider-row">
+        <span>1</span>
+        <input type="range" id="slider-depth" min="1" max="10" value="5" step="1">
+        <span class="slider-val" id="val-depth">5</span>
+      </div>
+      <div class="anchor-labels"><span>surface level</span><span>genuine depth</span></div>
+    </div>
+
+    <button id="submit-btn" class="btn mt1" style="width:100%">Submit Rating</button>
+    <div id="submit-error" class="error"></div>
+  </div>
+</div>
+
+<!-- DONE SCREEN -->
+<div id="done-screen" class="screen">
+  <div class="card center">
+    <div class="completion-icon">&#10003;</div>
+    <h2 class="mb1">All Done</h2>
+    <p class="mb2">Thank you for completing the blind ratings.</p>
+    <div class="stat" id="done-count">80</div>
+    <p class="mono mt1" style="color:var(--text2);font-size:.85rem">ratings submitted</p>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wgzopjrdnyazvhpklzhw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnem9wanJkbnlhenZocGtsemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTc4NzcsImV4cCI6MjA4OTk3Mzg3N30.8dx5xWljLDZa5PMvE0Ps5q4ZEyuZgx_5FHVnD0WfBjs';
+const VALID_RATERS = ['rater_A', 'rater_B', 'rater_C'];
+
+let raterId = '';
+let queue = [];      // {subject_id, task, text}
+let currentIdx = 0;
+let totalCount = 0;
+let submittedCount = 0;
+
+// ---- Screens ----
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ---- Supabase helpers ----
+async function supaGet(table, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!res.ok) throw new Error(`Fetch ${table} failed: ${res.status}`);
+  return res.json();
+}
+
+async function supaPost(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Insert failed: ${res.status} ${text}`);
+  }
+}
+
+// ---- Seeded shuffle (mulberry32) ----
+function seedFromString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(arr, seed) {
+  const rng = mulberry32(seed);
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---- Build queue ----
+async function buildQueue() {
+  // Fetch responses: English or null language, not test, both texts present
+  const params = [
+    't1_text=not.is.null',
+    't2_text=not.is.null',
+    'select=subject_id,t1_text,t2_text,t1_score,t2_score,writing_language,is_test'
+  ].join('&');
+
+  let rows = await supaGet('egc_responses', params);
+
+  // Filter client-side: English or null language, not test
+  rows = rows.filter(r =>
+    (r.writing_language === 'English' || r.writing_language === null) &&
+    (r.is_test !== true)
+  );
+
+  // Compute abs(t1_score - t2_score), sort descending
+  const scored = rows.map(r => ({
+    ...r,
+    absDrop: Math.abs((r.t1_score || 0) - (r.t2_score || 0))
+  }));
+  scored.sort((a, b) => b.absDrop - a.absDrop);
+
+  // Top 20 (largest drops) and bottom 20 (smallest drops)
+  const top20 = scored.slice(0, 20);
+  const bottom20 = scored.slice(-20);
+
+  // Deduplicate (in case fewer than 40 total)
+  const selected = new Map();
+  for (const r of [...top20, ...bottom20]) {
+    selected.set(r.subject_id, r);
+  }
+
+  // Create 2 entries per subject (task 1 and task 2)
+  const items = [];
+  for (const r of selected.values()) {
+    items.push({ subject_id: r.subject_id, task: 1, text: r.t1_text });
+    items.push({ subject_id: r.subject_id, task: 2, text: r.t2_text });
+  }
+
+  // Seeded shuffle based on rater_id
+  const seed = seedFromString(raterId);
+  const shuffled = seededShuffle(items, seed);
+
+  // Fetch already-rated items for this rater
+  const ratedRows = await supaGet('egc_ratings', `rater_id=eq.${raterId}&select=subject_id,task`);
+  const ratedSet = new Set(ratedRows.map(r => `${r.subject_id}__${r.task}`));
+
+  // Filter out already rated
+  const remaining = shuffled.filter(item => !ratedSet.has(`${item.subject_id}__${item.task}`));
+
+  totalCount = shuffled.length;
+  submittedCount = ratedSet.size;
+  queue = remaining;
+  currentIdx = 0;
+}
+
+// ---- UI ----
+function showCurrentText() {
+  if (currentIdx >= queue.length) {
+    document.getElementById('done-count').textContent = submittedCount;
+    showScreen('done-screen');
+    return;
+  }
+
+  const item = queue[currentIdx];
+  document.getElementById('text-display').textContent = item.text;
+
+  const done = submittedCount;
+  const num = done + 1;
+  document.getElementById('progress-label').textContent = `Rating ${num} of ${totalCount}`;
+  const pct = Math.round((done / totalCount) * 100);
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  // Reset sliders
+  ['richness', 'voice', 'depth'].forEach(name => {
+    const slider = document.getElementById(`slider-${name}`);
+    slider.value = 5;
+    document.getElementById(`val-${name}`).textContent = '5';
+  });
+
+  document.getElementById('submit-error').textContent = '';
+  showScreen('rating-screen');
+}
+
+// ---- Slider live values ----
+['richness', 'voice', 'depth'].forEach(name => {
+  const slider = document.getElementById(`slider-${name}`);
+  const display = document.getElementById(`val-${name}`);
+  slider.addEventListener('input', () => { display.textContent = slider.value; });
+});
+
+// ---- Login ----
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const code = document.getElementById('rater-input').value.trim();
+  const errEl = document.getElementById('login-error');
+
+  if (!VALID_RATERS.includes(code)) {
+    errEl.textContent = 'Invalid rater code. Use rater_A, rater_B, or rater_C.';
+    return;
+  }
+
+  raterId = code;
+  errEl.textContent = '';
+  showScreen('loading-screen');
+
+  try {
+    await buildQueue();
+    if (queue.length === 0) {
+      document.getElementById('done-count').textContent = submittedCount;
+      showScreen('done-screen');
+    } else {
+      showCurrentText();
+    }
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = 'Error loading data: ' + e.message;
+    showScreen('login-screen');
+  }
+});
+
+document.getElementById('rater-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+// ---- Submit rating ----
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('submit-btn');
+  const errEl = document.getElementById('submit-error');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  errEl.textContent = '';
+
+  const item = queue[currentIdx];
+  const richness = parseInt(document.getElementById('slider-richness').value);
+  const voice = parseInt(document.getElementById('slider-voice').value);
+  const depth = parseInt(document.getElementById('slider-depth').value);
+  const composite = Math.round(((richness + voice + depth) / 3) * 1000) / 1000;
+
+  const payload = {
+    rater_id: raterId,
+    subject_id: item.subject_id,
+    task: item.task,
+    rating_richness: richness,
+    rating_voice: voice,
+    rating_depth: depth,
+    rating_composite: composite,
+    rated_at: new Date().toISOString()
+  };
+
+  try {
+    await supaPost('egc_ratings', payload);
+    submittedCount++;
+    currentIdx++;
+    btn.disabled = false;
+    btn.textContent = 'Submit Rating';
+    showCurrentText();
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = 'Save failed: ' + e.message;
+    btn.disabled = false;
+    btn.textContent = 'Submit Rating';
+  }
+});
+</script>
+</body>
+</html>

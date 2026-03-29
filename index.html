@@ -339,6 +339,36 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
   </div>
 </div>
 
+<!-- Language Selection Screen -->
+<div class="consent-screen" id="language-screen" style="display:none;">
+  <div class="consent-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;">
+    <div style="text-align:center;max-width:480px;">
+      <div class="label" style="margin-bottom:12px;">Before We Begin</div>
+      <h2 style="font-family:'DM Serif Display',serif;color:var(--white);font-weight:400;margin-bottom:24px;">What language will you be writing in today?</h2>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <button class="btn btn-primary" style="width:100%;max-width:320px;margin:0 auto;justify-content:center;" onclick="selectLanguage('English')">English</button>
+        <button class="btn btn-secondary" style="width:100%;max-width:320px;margin:0 auto;justify-content:center;background:var(--surface);color:var(--text);border:1px solid var(--border-bright);" onclick="selectLanguage('Spanish')">Spanish</button>
+        <button class="btn btn-secondary" style="width:100%;max-width:320px;margin:0 auto;justify-content:center;background:var(--surface);color:var(--text);border:1px solid var(--border-bright);" onclick="selectLanguage('French')">French</button>
+        <button class="btn btn-secondary" style="width:100%;max-width:320px;margin:0 auto;justify-content:center;background:var(--surface);color:var(--text);border:1px solid var(--border-bright);" onclick="selectLanguage('Portuguese')">Portuguese</button>
+        <button class="btn btn-secondary" style="width:100%;max-width:320px;margin:0 auto;justify-content:center;background:var(--surface);color:var(--text);border:1px solid var(--border-bright);" onclick="selectLanguage('Other')">Other</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Non-English Welcome Screen -->
+<div class="consent-screen" id="non-english-screen" style="display:none;">
+  <div class="consent-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;">
+    <div style="text-align:center;max-width:520px;">
+      <div style="font-size:36px;margin-bottom:20px;">&#127760;</div>
+      <h2 style="font-family:'DM Serif Display',serif;color:var(--white);font-weight:400;margin-bottom:16px;">Thank you.</h2>
+      <p style="color:var(--text);font-size:15px;line-height:1.8;margin-bottom:8px;">This study is designed primarily for English writers, but we welcome responses in other languages.</p>
+      <p style="color:var(--text);font-size:15px;line-height:1.8;margin-bottom:28px;">Your response will be analyzed separately as part of our cross-linguistic research. Please proceed &#8212; your data is valuable.</p>
+      <button class="btn btn-primary" style="width:100%;max-width:320px;justify-content:center;" onclick="proceedAfterLanguage()">Continue to Study &#8594;</button>
+    </div>
+  </div>
+</div>
+
 <div class="bg-gradient"></div>
 
 <!-- Progress Steps (5 steps now) -->
@@ -599,6 +629,7 @@ const TABLE='egc_responses';
 let subjectId='S'+Date.now().toString(36).toUpperCase();
 let startTime1,startTime2,endTime1,endTime2,analysisData={};
 let consentedAt=null;
+let writingLanguage='English';
 
 // Counterbalancing - randomly assign condition
 const studyCondition = Math.random() < 0.5 ? 'A' : 'B';
@@ -607,6 +638,7 @@ const studyCondition = Math.random() < 0.5 ? 'A' : 'B';
 (function(){
   if(sessionStorage.getItem('egc_consent')==='true'){
     consentedAt=sessionStorage.getItem('egc_consent_ts');
+    writingLanguage=sessionStorage.getItem('egc_language')||'English';
     document.getElementById('consent-screen').style.display='none';
   }
 })();
@@ -616,6 +648,22 @@ function acceptConsent(){
   sessionStorage.setItem('egc_consent','true');
   sessionStorage.setItem('egc_consent_ts',consentedAt);
   document.getElementById('consent-screen').style.display='none';
+  document.getElementById('language-screen').style.display='';
+}
+
+function selectLanguage(lang){
+  writingLanguage=lang;
+  sessionStorage.setItem('egc_language',lang);
+  document.getElementById('language-screen').style.display='none';
+  if(lang==='English'){
+    proceedAfterLanguage();
+  } else {
+    document.getElementById('non-english-screen').style.display='';
+  }
+}
+
+function proceedAfterLanguage(){
+  document.getElementById('non-english-screen').style.display='none';
   applyCondition();
 }
 
@@ -829,7 +877,10 @@ async function saveToSupabase(data){
     gender: document.querySelector('input[name="gender"]:checked')?.value || null,
     faces_discrimination: document.querySelector('input[name="discrimination"]:checked')?.value || null,
     current_context: document.querySelector('input[name="context"]:checked')?.value || null,
-    country: document.getElementById('country-input')?.value || null
+    country: document.getElementById('country-input')?.value || null,
+    writing_language: writingLanguage,
+    cross_linguistic: writingLanguage !== 'English',
+    r_measurement_version: 'v2'
   };
   const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify(row)});
   return res.ok;
