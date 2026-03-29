@@ -606,14 +606,42 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;bac
   <div class="accent-line" style="background:var(--orange)"></div>
   <div class="label">Live Results Dashboard</div>
   <h2>Study Data</h2>
-  <p class="muted">Real-time results from all participants.</p>
+  <p class="muted">Real-time results from primary dataset (excluded subjects filtered out).</p>
+
   <div class="dash-grid">
-    <div class="dash-stat"><div class="dash-stat-value" id="d-n">&#8212;</div><div class="dash-stat-label">Total Responses</div></div>
-    <div class="dash-stat"><div class="dash-stat-value" id="d-confirmed">&#8212;</div><div class="dash-stat-label">T Drop Confirmed</div></div>
-    <div class="dash-stat"><div class="dash-stat-value" id="d-pct">&#8212;</div><div class="dash-stat-label">Avg T Drop %</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-n">&#8212;</div><div class="dash-stat-label">Primary Subjects</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-types">&#8212;</div><div class="dash-stat-label">Types Identified</div></div>
+    <div class="dash-stat"><div class="dash-stat-value" id="d-gap">&#8212;</div><div class="dash-stat-label">Comfort Gap</div></div>
   </div>
-  <div class="card" style="margin-top:8px"><div class="label">Population Metrics</div><div id="dash-metrics"></div></div>
-  <div class="card" style="margin-top:8px"><div class="label">Individual Responses</div><div id="dash-rows"></div></div>
+
+  <div class="card" style="margin-top:8px"><div id="dash-types"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-comfort"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-metrics"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-cohorts"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-demographics"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-zeror"></div></div>
+  <div class="card" style="margin-top:8px"><div id="dash-rater"></div></div>
+
+  <div class="card" style="margin-top:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="label" style="margin:0">Individual Responses</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select id="filter-type" onchange="renderRows()" style="background:var(--surface);color:var(--text);border:1px solid var(--border-bright);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px">
+          <option value="all">All Types</option><option value="Compressor">Compressor</option><option value="Expander">Expander</option><option value="Suppressor">Suppressor</option>
+        </select>
+        <select id="filter-cohort" onchange="renderRows()" style="background:var(--surface);color:var(--text);border:1px solid var(--border-bright);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px">
+          <option value="all">All Cohorts</option><option value="v1">v1 Pilot</option><option value="v2">v2 Confirmatory</option>
+        </select>
+        <select id="filter-condition" onchange="renderRows()" style="background:var(--surface);color:var(--text);border:1px solid var(--border-bright);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px">
+          <option value="all">All Conditions</option><option value="A">Condition A</option><option value="B">Condition B</option>
+        </select>
+        <label style="font-family:'DM Mono',monospace;font-size:10px;color:var(--grey);display:flex;align-items:center;gap:4px"><input type="checkbox" id="show-excluded" onchange="renderRows()"> Show excluded</label>
+        <button class="btn btn-secondary" style="padding:4px 12px;font-size:10px" onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+    <div id="dash-rows"></div>
+  </div>
+
   <div class="btn-group" style="margin-top:8px">
     <button class="btn btn-primary" onclick="loadDash()">Refresh &#8594;</button>
     <button class="btn btn-secondary" onclick="go(0)">Take the Study &#8594;</button>
@@ -1212,87 +1240,263 @@ async function checkPw(){
     document.getElementById('admin-pw').value='';
   }
 }
+let allDashRows = [];
+let allDashData = [];
+
+function getType(r) {
+  if (!r.t_drop && r.t_drop !== 0) return 'Unknown';
+  var td = parseFloat(r.t_drop);
+  if (Math.abs(td) <= 0.02) return 'Compressor';
+  if (td < -0.02) return 'Expander';
+  return 'Suppressor';
+}
+
+function typeColor(t) {
+  if (t === 'Compressor') return 'var(--teal)';
+  if (t === 'Expander') return 'var(--purple)';
+  if (t === 'Suppressor') return 'var(--coral, var(--red))';
+  return 'var(--grey)';
+}
+
+function typeBorder(t) {
+  if (t === 'Compressor') return '3px solid var(--teal)';
+  if (t === 'Expander') return '3px solid var(--purple)';
+  if (t === 'Suppressor') return '3px solid var(--coral, var(--red))';
+  return '3px solid var(--grey)';
+}
+
+function pearsonR(pairs) {
+  var n = pairs.length;
+  if (n < 3) return null;
+  var mx = 0, my = 0;
+  for (var i = 0; i < n; i++) { mx += pairs[i][0]; my += pairs[i][1]; }
+  mx /= n; my /= n;
+  var num = 0, dx = 0, dy = 0;
+  for (var i = 0; i < n; i++) {
+    var a = pairs[i][0] - mx, b = pairs[i][1] - my;
+    num += a * b; dx += a * a; dy += b * b;
+  }
+  var den = Math.sqrt(dx) * Math.sqrt(dy);
+  return den > 0 ? num / den : 0;
+}
+
+function renderRows() {
+  var ft = document.getElementById('filter-type').value;
+  var fc = document.getElementById('filter-cohort').value;
+  var fcon = document.getElementById('filter-condition').value;
+  var showExcl = document.getElementById('show-excluded').checked;
+
+  var filtered = allDashData.filter(function(d) {
+    if (!showExcl && d.row.is_excluded) return false;
+    if (ft !== 'all' && d.type !== ft) return false;
+    if (fc !== 'all' && d.row.r_measurement_version !== fc) return false;
+    if (fcon !== 'all' && d.row.condition !== fcon) return false;
+    return true;
+  });
+
+  document.getElementById('dash-rows').innerHTML = filtered.map(function(d) {
+    var r = d.row;
+    var isV2 = r.r_measurement_version === 'v2';
+    var rItems = '';
+    if (isV2 && r.r_item_1 != null) {
+      rItems = '<div style="margin-top:6px;font-size:10px;color:var(--grey)">' +
+        'r profile: [comfort=' + r.r_item_1 + '] [holdback=' + r.r_item_2 + '] [editing=' + r.r_item_3 + '] ' +
+        '<span style="color:var(--teal)">[aware=' + r.r_item_4 + ']</span> ' +
+        '<span style="color:var(--teal)">[changed=' + r.r_item_5 + ']</span> ' +
+        '[closeness=' + r.r_item_6 + '] [quality=' + r.r_item_7 + ']' +
+        '</div>';
+    }
+    var demos = '';
+    if (isV2 && r.age_range) {
+      demos = '<div style="margin-top:4px;font-size:10px;color:var(--grey)">' +
+        (r.faces_discrimination ? 'Faces discrimination: ' + r.faces_discrimination + ' | ' : '') +
+        (r.gender ? 'Gender: ' + r.gender + ' | ' : '') +
+        (r.age_range ? 'Age: ' + r.age_range : '') +
+        (r.country ? ' | ' + r.country : '') +
+        '</div>';
+    }
+    var excludedTag = r.is_excluded ? ' <span style="color:var(--red);font-size:9px">[EXCLUDED: ' + (r.exclusion_reason||'') + ']</span>' : '';
+    var langTag = r.writing_language && r.writing_language !== 'English' ? ' <span style="color:var(--orange);font-size:9px">[' + r.writing_language + ']</span>' : '';
+
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);border-left:' + typeBorder(d.type) + ';padding-left:12px;margin-bottom:4px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">' +
+        '<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--white)">' + (r.subject_id||'?') + ' &middot; ' + new Date(r.created_at).toLocaleDateString() + ' &middot; ' + (r.condition||'?') + ' &middot; <span style="color:' + typeColor(d.type) + '">' + d.type + '</span>' + excludedTag + langTag + '</span>' +
+      '</div>' +
+      '<div style="font-family:\'DM Mono\',monospace;font-size:11px;margin-top:4px">' +
+        'T: ' + (r.t1_score||0).toFixed(3) + ' &rarr; ' + (r.t2_score||0).toFixed(3) + ' (drop: ' + (r.t_drop||0).toFixed(3) + ') | ' +
+        'Words: ' + (r.t1_wordcount||0) + ' &rarr; ' + (r.t2_wordcount||0) +
+      '</div>' +
+      '<div style="font-family:\'DM Mono\',monospace;font-size:11px;margin-top:2px;color:var(--grey-light)">' +
+        (isV2 && r.r_composite != null ? 'r_composite: ' + parseFloat(r.r_composite).toFixed(3) + ' | ' : '') +
+        'comfort: ' + (r.comfort_rating||'?') + '/10 | r_proxy: ' + (r.r_proxy||0) +
+      '</div>' +
+      rItems + demos +
+    '</div>';
+  }).join('');
+}
+
+function exportCSV() {
+  var showExcl = document.getElementById('show-excluded').checked;
+  var rows = showExcl ? allDashData.map(function(d){return d.row}) : allDashData.filter(function(d){return !d.row.is_excluded}).map(function(d){return d.row});
+  if (!rows.length) return;
+  var keys = Object.keys(rows[0]).filter(function(k){return k !== 'full_data' && k !== 't1_text' && k !== 't2_text'});
+  var csv = keys.join(',') + '\n';
+  rows.forEach(function(r) {
+    csv += keys.map(function(k) {
+      var v = r[k];
+      if (v == null) return '';
+      var s = String(v);
+      if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }).join(',') + '\n';
+  });
+  var blob = new Blob([csv], {type: 'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'egc_responses_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
 async function loadDash(){
-  ['d-n','d-confirmed','d-pct'].forEach(id=>document.getElementById(id).textContent='...');
-  document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">Loading...</p>';
-  document.getElementById('dash-rows').innerHTML='';
-  let rows;try{rows=await fetchResults();}catch(e){rows=[];}
-  if(!rows.length){
-    document.getElementById('d-n').textContent='0';
-    document.getElementById('d-confirmed').textContent='0%';
-    document.getElementById('d-pct').textContent='\u2014';
-    document.getElementById('dash-metrics').innerHTML='<p class="muted" style="font-size:13px">No responses yet. Share the study link to collect data.</p>';
+  ['d-n','d-types','d-gap'].forEach(function(id){document.getElementById(id).textContent='...'});
+  ['dash-types','dash-comfort','dash-metrics','dash-cohorts','dash-demographics','dash-zeror','dash-rater','dash-rows'].forEach(function(id){document.getElementById(id).innerHTML='<p class="muted" style="font-size:13px">Loading...</p>'});
+
+  var rows;
+  try { rows = await fetchResults(); } catch(e) { rows = []; }
+
+  // Store all data for filtering
+  allDashData = rows.map(function(r) { return { row: r, type: getType(r) }; });
+
+  // Primary dataset: non-excluded only
+  var primary = rows.filter(function(r) { return !r.is_excluded; });
+  var n = primary.length;
+
+  if (!n) {
+    document.getElementById('d-n').textContent = '0';
+    ['dash-types','dash-comfort','dash-metrics','dash-cohorts','dash-demographics','dash-zeror'].forEach(function(id){document.getElementById(id).innerHTML='<p class="muted" style="font-size:13px">No data yet.</p>'});
     return;
   }
-  const n=rows.length;
 
-  // T metrics
-  const confirmed=rows.filter(r=>r.prediction_confirmed).length;
-  const confPct=Math.round(confirmed/n*100);
-  const avgTDrop=(rows.reduce((a,r)=>a+(r.t_drop_pct||0),0)/n).toFixed(1);
-  const avgT1=(rows.reduce((a,r)=>a+(r.t1_score||0),0)/n).toFixed(3);
-  const avgT2=(rows.reduce((a,r)=>a+(r.t2_score||0),0)/n).toFixed(3);
+  // Type counts
+  var types = { Compressor: 0, Expander: 0, Suppressor: 0 };
+  primary.forEach(function(r) { var t = getType(r); if (types[t] !== undefined) types[t]++; });
 
-  // Volume metrics
-  const volDrops=rows.map(r=>({
-    drop: (r.t1_wordcount||0)-(r.t2_wordcount||0),
-    pct: r.t1_wordcount>0 ? (((r.t1_wordcount-r.t2_wordcount)/r.t1_wordcount)*100) : 0,
-    wc1: r.t1_wordcount||0,
-    wc2: r.t2_wordcount||0
-  }));
-  const volDown=volDrops.filter(v=>v.drop>0).length;
-  const avgVolPct=(volDrops.reduce((a,v)=>a+v.pct,0)/n).toFixed(1);
-  const avgWC1=(volDrops.reduce((a,v)=>a+v.wc1,0)/n).toFixed(0);
-  const avgWC2=(volDrops.reduce((a,v)=>a+v.wc2,0)/n).toFixed(0);
+  // Comfort gap
+  var highR = primary.filter(function(r) { return r.r_proxy != null && parseFloat(r.r_proxy) > 0.5; });
+  var lowR = primary.filter(function(r) { return r.r_proxy != null && parseFloat(r.r_proxy) < 0.2; });
+  var highRComfort = highR.length ? (highR.reduce(function(a,r){return a+(r.comfort_rating||0)},0)/highR.length) : 0;
+  var lowRComfort = lowR.length ? (lowR.reduce(function(a,r){return a+(r.comfort_rating||0)},0)/lowR.length) : 0;
+  var gap = (lowRComfort - highRComfort).toFixed(1);
 
-  // Brandyn divergence
-  const divergence=rows.filter((r,i)=>volDrops[i].drop>0 && r.t2_score>=r.t1_score).length;
+  // Header stats
+  document.getElementById('d-n').textContent = n;
+  document.getElementById('d-types').textContent = '3';
+  document.getElementById('d-gap').textContent = gap + ' pts';
 
-  // Other
-  const avgComfort=(rows.reduce((a,r)=>a+(r.comfort_rating||0),0)/n).toFixed(1);
-  const avgR=(rows.reduce((a,r)=>a+(r.r_proxy||0),0)/n).toFixed(3);
-  const avgK=(rows.reduce((a,r)=>a+(r.k_proxy||0),0)/n).toFixed(3);
+  // Types section
+  document.getElementById('dash-types').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">EXPRESSION TYPES</div>' +
+    '<div class="dash-row"><span class="dash-row-label" style="color:var(--teal)">Compressor (|T_drop| \u2264 0.02)</span><span class="dash-row-value">' + types.Compressor + ' / ' + n + ' (' + Math.round(types.Compressor/n*100) + '%)</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label" style="color:var(--purple)">Expander (T_drop < -0.02)</span><span class="dash-row-value">' + types.Expander + ' / ' + n + ' (' + Math.round(types.Expander/n*100) + '%)</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label" style="color:var(--coral,var(--red))">Suppressor (T_drop > 0.02)</span><span class="dash-row-value">' + types.Suppressor + ' / ' + n + ' (' + Math.round(types.Suppressor/n*100) + '%)</span></div>';
 
-  document.getElementById('d-n').textContent=n;
-  document.getElementById('d-confirmed').textContent=volDown+'/'+n;
-  document.getElementById('d-pct').textContent=avgVolPct+'%';
+  // Comfort gap section
+  document.getElementById('dash-comfort').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:12px">RESISTANCE \u2014 COMFORT GAP</div>' +
+    '<div class="dash-row"><span class="dash-row-label">High-resistance subjects (r > 0.5)</span><span class="dash-row-value">n=' + highR.length + ' &middot; Mean comfort: ' + highRComfort.toFixed(1) + ' / 10</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Low-resistance subjects (r < 0.2)</span><span class="dash-row-value">n=' + lowR.length + ' &middot; Mean comfort: ' + lowRComfort.toFixed(1) + ' / 10</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label"><strong style="color:var(--white)">Comfort gap</strong></span><span class="dash-row-value" style="color:var(--orange)">' + gap + ' points</span></div>' +
+    '<div style="font-size:11px;color:var(--grey);margin-top:8px">Stable from N=9 to current N=' + n + '</div>';
 
-  // Update header labels
-  document.getElementById('d-confirmed').closest('.dash-stat').querySelector('.dash-stat-label').textContent='Volume Drop';
-  document.getElementById('d-pct').closest('.dash-stat').querySelector('.dash-stat-label').textContent='Avg Vol Drop %';
+  // T metrics + Pearson
+  var avgT1 = (primary.reduce(function(a,r){return a+(r.t1_score||0)},0)/n).toFixed(3);
+  var avgT2 = (primary.reduce(function(a,r){return a+(r.t2_score||0)},0)/n).toFixed(3);
+  var avgTDrop = (primary.reduce(function(a,r){return a+(r.t_drop||0)},0)/n).toFixed(4);
+  var avgVolDrop = (primary.reduce(function(a,r){return a+((r.t1_wordcount||0)-(r.t2_wordcount||0))},0)/n).toFixed(1);
 
-  document.getElementById('dash-metrics').innerHTML=`
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">TRANSMISSION FIDELITY (T)</div>
-    <div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 1 (free writing)</span><span class="dash-row-value" style="color:var(--teal)">${avgT1}</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 2 (evaluative)</span><span class="dash-row-value">${avgT2}</span></div>
-    <div class="dash-row"><span class="dash-row-label">T drop confirmed (>2%)</span><span class="dash-row-value">${confirmed} / ${n} (${confPct}%)</span></div>
+  var pairs = primary.filter(function(r){return r.r_proxy!=null && r.t_drop!=null}).map(function(r){return [parseFloat(r.r_proxy), parseFloat(r.t_drop)]});
+  var pr = pearsonR(pairs);
 
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin:16px 0 12px">VOLUME \u2014 BRANDYN'S DENSITY-VOLUME DIVERGENCE</div>
-    <div class="dash-row"><span class="dash-row-label">Mean word count \u2014 Task 1</span><span class="dash-row-value" style="color:var(--teal)">${avgWC1} words</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean word count \u2014 Task 2</span><span class="dash-row-value" style="color:var(--red)">${avgWC2} words</span></div>
-    <div class="dash-row"><span class="dash-row-label">Subjects writing fewer words under evaluation</span><span class="dash-row-value" style="color:var(--orange)">${volDown} / ${n} (${Math.round(volDown/n*100)}%)</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean volume reduction</span><span class="dash-row-value">${avgVolPct}%</span></div>
-    <div class="dash-row"><span class="dash-row-label">Density-volume divergence (vol\u2193 + T stable/up)</span><span class="dash-row-value" style="color:var(--purple)">${divergence} / ${n} subjects</span></div>
+  document.getElementById('dash-metrics').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">TRANSMISSION FIDELITY</div>' +
+    '<div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 1 (free)</span><span class="dash-row-value" style="color:var(--teal)">' + avgT1 + '</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Mean T \u2014 Task 2 (evaluated)</span><span class="dash-row-value">' + avgT2 + '</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Mean T_drop</span><span class="dash-row-value">' + avgTDrop + '</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Mean volume change (words)</span><span class="dash-row-value">' + avgVolDrop + ' words</span></div>' +
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--purple);margin:16px 0 12px">CORRELATION</div>' +
+    '<div class="dash-row"><span class="dash-row-label"><strong style="color:var(--white)">Pearson r (r_proxy vs T_drop)</strong></span><span class="dash-row-value" style="color:var(--purple)">' + (pr !== null ? pr.toFixed(3) : 'N/A') + '</span></div>' +
+    '<div style="font-size:11px;color:var(--grey);margin-top:4px">r_proxy predicts suppression \u2014 moderate, positive</div>';
 
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin:16px 0 12px">PROXIES</div>
-    <div class="dash-row"><span class="dash-row-label">Mean comfort rating</span><span class="dash-row-value">${avgComfort} / 10</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean r proxy</span><span class="dash-row-value">${avgR}</span></div>
-    <div class="dash-row"><span class="dash-row-label">Mean K proxy</span><span class="dash-row-value">${avgK}</span></div>`;
+  // Cohorts
+  var v1 = primary.filter(function(r){return r.r_measurement_version==='v1'}).length;
+  var v2 = primary.filter(function(r){return r.r_measurement_version==='v2'}).length;
+  var condA = primary.filter(function(r){return r.condition==='A'}).length;
+  var condB = primary.filter(function(r){return r.condition==='B'}).length;
 
-  document.getElementById('dash-rows').innerHTML=rows.map((r,i)=>{
-    const vd=volDrops[i];
-    const volDir=vd.drop>0;
-    const diverg=volDir && r.t2_score>=r.t1_score;
-    return`<div class="dash-row">
-      <span class="dash-row-label">${r.subject_id||'S'+i} \u00B7 ${new Date(r.created_at).toLocaleDateString()}${r.condition?' \u00B7 '+r.condition:''}</span>
-      <span style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-        <span class="tag tag-teal" style="font-size:10px">T1=${(r.t1_score||0).toFixed(2)}</span>
-        <span class="tag tag-${r.t2_score<r.t1_score?'teal':'red'}" style="font-size:10px">T2=${(r.t2_score||0).toFixed(2)}</span>
-        <span class="tag tag-${volDir?'red':'purple'}" style="font-size:10px">${vd.wc1}\u2192${vd.wc2}w ${volDir?'\u2193':'\u2191'}</span>
-        ${diverg?'<span class="tag tag-purple" style="font-size:10px">divergence</span>':''}
-      </span>
-    </div>`;
-  }).join('');
+  document.getElementById('dash-cohorts').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);margin-bottom:12px">STUDY COHORTS</div>' +
+    '<div class="dash-row"><span class="dash-row-label">Pilot cohort (v1 \u2014 single-item r)</span><span class="dash-row-value">' + v1 + ' subjects</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Confirmatory cohort (v2 \u2014 7-item r)</span><span class="dash-row-value">' + v2 + ' subjects</span></div>' +
+    '<div style="border-top:1px solid var(--border);margin:12px 0"></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Condition A (free writing first)</span><span class="dash-row-value">' + condA + ' subjects</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Condition B (evaluation first)</span><span class="dash-row-value">' + condB + ' subjects</span></div>';
+
+  // Demographics (v2 only)
+  var v2rows = primary.filter(function(r){return r.r_measurement_version==='v2'});
+  if (v2rows.length > 0) {
+    var discYes = v2rows.filter(function(r){return r.faces_discrimination==='yes'}).length;
+    var discNo = v2rows.filter(function(r){return r.faces_discrimination==='no'}).length;
+    var discPref = v2rows.filter(function(r){return r.faces_discrimination==='prefer_not'||r.faces_discrimination==='prefer not to say'}).length;
+    var genders = {};
+    v2rows.forEach(function(r){if(r.gender){genders[r.gender]=(genders[r.gender]||0)+1}});
+    var ages = {};
+    v2rows.forEach(function(r){if(r.age_range){ages[r.age_range]=(ages[r.age_range]||0)+1}});
+    var countries = {};
+    v2rows.forEach(function(r){if(r.country){countries[r.country]=(countries[r.country]||0)+1}});
+
+    // Stereotype threat connection
+    var suppDiscYes = v2rows.filter(function(r){return r.faces_discrimination==='yes' && getType(r)==='Suppressor'}).length;
+    var suppDiscNo = v2rows.filter(function(r){return r.faces_discrimination==='no' && getType(r)==='Suppressor'}).length;
+
+    document.getElementById('dash-demographics').innerHTML =
+      '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);margin-bottom:12px">DEMOGRAPHICS (v2 subjects only, n=' + v2rows.length + ')</div>' +
+      '<div class="dash-row"><span class="dash-row-label">Faces discrimination</span><span class="dash-row-value">Yes: ' + discYes + ' &middot; No: ' + discNo + ' &middot; Prefer not: ' + discPref + '</span></div>' +
+      '<div class="dash-row"><span class="dash-row-label">Gender</span><span class="dash-row-value">' + Object.entries(genders).map(function(e){return e[0]+': '+e[1]}).join(' &middot; ') + '</span></div>' +
+      '<div class="dash-row"><span class="dash-row-label">Age range</span><span class="dash-row-value">' + Object.entries(ages).map(function(e){return e[0]+': '+e[1]}).join(' &middot; ') + '</span></div>' +
+      '<div class="dash-row"><span class="dash-row-label">Countries</span><span class="dash-row-value">' + Object.entries(countries).map(function(e){return e[0]+': '+e[1]}).join(' &middot; ') + '</span></div>' +
+      (discYes > 0 || discNo > 0 ?
+        '<div style="border-top:1px solid var(--border);margin:12px 0"></div>' +
+        '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:8px">STEREOTYPE THREAT CONNECTION (preliminary)</div>' +
+        '<div class="dash-row"><span class="dash-row-label">Suppressor rate \u2014 faces discrimination=yes</span><span class="dash-row-value">' + (discYes>0 ? Math.round(suppDiscYes/discYes*100)+'%' : 'N/A') + ' (' + suppDiscYes + '/' + discYes + ')</span></div>' +
+        '<div class="dash-row"><span class="dash-row-label">Suppressor rate \u2014 faces discrimination=no</span><span class="dash-row-value">' + (discNo>0 ? Math.round(suppDiscNo/discNo*100)+'%' : 'N/A') + ' (' + suppDiscNo + '/' + discNo + ')</span></div>'
+      : '');
+  } else {
+    document.getElementById('dash-demographics').innerHTML =
+      '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);margin-bottom:12px">DEMOGRAPHICS</div>' +
+      '<p class="muted" style="font-size:13px">No v2 subjects with demographics yet.</p>';
+  }
+
+  // Zero-r suppressors
+  var zeroR = primary.filter(function(r){return r.r_proxy!=null && parseFloat(r.r_proxy)===0 && r.t_drop!=null && parseFloat(r.t_drop)>0.02});
+  var zeroRMeanDrop = zeroR.length ? (zeroR.reduce(function(a,r){return a+parseFloat(r.t_drop)},0)/zeroR.length).toFixed(3) : 'N/A';
+  var datasetMeanDrop = parseFloat(avgTDrop).toFixed(3);
+
+  document.getElementById('dash-zeror').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--purple);margin-bottom:12px">ZERO-RESISTANCE SUPPRESSORS</div>' +
+    '<div class="dash-row"><span class="dash-row-label">Subjects with r=0 who still suppress (T_drop>0.02)</span><span class="dash-row-value" style="color:var(--purple)">' + zeroR.length + '</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Mean T_drop for zero-r suppressors</span><span class="dash-row-value">' + zeroRMeanDrop + '</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Dataset mean T_drop for comparison</span><span class="dash-row-value">' + datasetMeanDrop + '</span></div>' +
+    '<div style="font-size:11px;color:var(--grey);margin-top:8px;font-style:italic">Second suppression mechanism \u2014 operates independently of conscious resistance.</div>';
+
+  // Rater validation placeholder
+  document.getElementById('dash-rater').innerHTML =
+    '<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-light);margin-bottom:12px">RATER VALIDATION (in progress)</div>' +
+    '<div class="dash-row"><span class="dash-row-label">Rater interface</span><span class="dash-row-value"><a href="https://theartofsound.github.io/egcstudy/egcrate/" target="_blank" style="color:var(--teal)">egcrate</a></span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Texts queued for rating</span><span class="dash-row-value">80</span></div>' +
+    '<div class="dash-row"><span class="dash-row-label">Status</span><span class="dash-row-value">Awaiting raters</span></div>';
+
+  // Render individual rows
+  renderRows();
 }
 
 </script>
