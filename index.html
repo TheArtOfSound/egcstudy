@@ -938,7 +938,31 @@ async function saveToSupabase(data){
 }
 
 async function fetchResults(){
-  const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}?select=*&order=created_at.desc&limit=100`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});
+  // Paginate past Supabase's default 1000-row hard cap using Range header
+  const all = [];
+  let from = 0;
+  const chunk = 1000;
+  while (true) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${TABLE}?select=*&order=created_at.desc`, {
+      headers: {
+        apikey: SUPA_KEY,
+        Authorization: `Bearer ${SUPA_KEY}`,
+        Range: `${from}-${from + chunk - 1}`,
+        'Range-Unit': 'items',
+      },
+    });
+    if (!r.ok) break;
+    const part = await r.json();
+    if (!Array.isArray(part) || part.length === 0) break;
+    all.push(...part);
+    if (part.length < chunk) break;
+    from += chunk;
+  }
+  return all;
+}
+
+async function fetchResultsLegacy(){
+  const res=await fetch(`${SUPA_URL}/rest/v1/${TABLE}?select=*&order=created_at.desc&limit=10000`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});
   if(!res.ok)return[];return await res.json();
 }
 
